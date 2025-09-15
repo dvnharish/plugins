@@ -1,0 +1,24 @@
+{
+  "name": "@devguard/runners",
+  "version": "1.0.0",
+  "description": "Scanner runners for DevGuard",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@devguard/shared": "workspace:*",
+    "execa": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0",
+    "rimraf": "^5.0.0"
+  }
+}

@@ -1,0 +1,26 @@
+# DevGuard Configuration for Demo Project
+copilot:
+  applyFix: auto # auto | preview | ask
+
+policy:
+  minScore: 75
+
+sca:
+  allowLicenses: ["Apache-2.0", "MIT", "BSD-3-Clause"]
+
+reports:
+  formats: [markdown, sarif]
+
+scanners:
+  spotbugs:
+    enabled: true
+  pmd:
+    enabled: true
+  checkstyle:
+    enabled: true
+  semgrep:
+    enabled: true
+  gitleaks:
+    enabled: true
+  dependencyCheck:
+    enabled: true

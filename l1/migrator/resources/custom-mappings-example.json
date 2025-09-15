@@ -1,0 +1,27 @@
+{
+  "name": "Custom Enterprise Mappings",
+  "description": "Custom field mappings for enterprise-specific Converge implementations",
+  "version": "1.0.0",
+  "mappings": [
+    {
+      "convergeEndpoint": "/custom-enterprise-endpoint",
+      "elavonEndpoint": "/enterprise-transactions",
+      "method": "POST",
+      "fieldMappings": {
+        "ssl_custom_field_1": "enterprise.customField1",
+        "ssl_custom_field_2": "enterprise.customField2",
+        "ssl_enterprise_id": "enterprise.id"
+      },
+      "overrides": false
+    },
+    {
+      "convergeEndpoint": "/hosted-payments/transaction_token",
+      "elavonEndpoint": "/transactions",
+      "method": "POST",
+      "fieldMappings": {
+        "ssl_custom_merchant_field": "merchant.customData"
+      },
+      "overrides": true
+    }
+  ]
+}

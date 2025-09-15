@@ -1,0 +1,407 @@
+{
+  "name": "converge-elavon-migrator",
+  "displayName": "Converge to Elavon Migrator",
+  "description": "Automate migration of legacy Converge APIs to modern Elavon APIs with AI assistance",
+  "version": "1.0.0",
+  "publisher": "converge-elavon",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Snippets",
+    "Formatters"
+  ],
+  "keywords": [
+    "converge",
+    "elavon",
+    "migration",
+    "api",
+    "payment",
+    "copilot"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:php",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:csharp"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "converge-elavon.scanProject",
+        "title": "Scan Project for Converge Endpoints",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.migrateEndpoint",
+        "title": "Migrate to Elavon",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.bulkMigrate",
+        "title": "Migrate All Endpoints",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.validateMigration",
+        "title": "Validate Against Elavon Sandbox",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.openCredentials",
+        "title": "Configure Elavon Credentials",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.showDocumentation",
+        "title": "Show Documentation",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.refreshEndpoints",
+        "title": "Refresh Endpoints",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.clearCredentials",
+        "title": "Clear Credentials",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.showMappingDictionary",
+        "title": "Show Mapping Dictionary",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.reloadMappings",
+        "title": "Reload Mappings",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.showMigrationHistory",
+        "title": "Show Migration History",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.rollbackMigration",
+        "title": "Rollback Migration",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.clearMigrationHistory",
+        "title": "Clear Migration History",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.exportMigrationHistory",
+        "title": "Export Migration History",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.importMigrationHistory",
+        "title": "Import Migration History",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.showErrorLog",
+        "title": "Show Error Log",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.showPerformanceMetrics",
+        "title": "Show Performance Metrics",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.clearErrorLog",
+        "title": "Clear Error Log",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.exportErrorLog",
+        "title": "Export Error Log",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.showConfiguration",
+        "title": "Show Configuration",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.resetConfiguration",
+        "title": "Reset Configuration",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.exportConfiguration",
+        "title": "Export Configuration",
+        "category": "Converge-Elavon"
+      },
+      {
+        "command": "converge-elavon.importConfiguration",
+        "title": "Import Configuration",
+        "category": "Converge-Elavon"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "converge-elavon.migrateEndpoint",
+          "when": "editorHasSelection && resourceExtname =~ /\\.(js|ts|php|py|java|cs)$/",
+          "group": "converge-elavon@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "converge-elavon.scanProject"
+        },
+        {
+          "command": "converge-elavon.bulkMigrate",
+          "when": "converge-elavon.hasEndpoints"
+        },
+        {
+          "command": "converge-elavon.openCredentials"
+        },
+        {
+          "command": "converge-elavon.showDocumentation"
+        },
+        {
+          "command": "converge-elavon.refreshEndpoints"
+        },
+        {
+          "command": "converge-elavon.clearCredentials"
+        },
+        {
+          "command": "converge-elavon.validateMigration"
+        },
+        {
+          "command": "converge-elavon.showMappingDictionary"
+        },
+        {
+          "command": "converge-elavon.reloadMappings"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "converge-elavon.scanProject",
+          "when": "explorerResourceIsFolder",
+          "group": "converge-elavon@1"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "converge-elavon.scanView",
+          "name": "Converge Endpoints",
+          "when": "converge-elavon.hasEndpoints"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "converge-elavon",
+          "title": "Converge-Elavon Migrator",
+          "icon": "$(arrow-swap)"
+        }
+      ]
+    },
+    "webviews": [
+      {
+        "viewType": "converge-elavon.scanPanel",
+        "displayName": "Project Scan"
+      },
+      {
+        "viewType": "converge-elavon.credentialsPanel",
+        "displayName": "Credentials"
+      },
+      {
+        "viewType": "converge-elavon.documentationPanel",
+        "displayName": "Documentation"
+      },
+      {
+        "viewType": "converge-elavon.migrationPanel",
+        "displayName": "Migration"
+      }
+    ],
+    "configuration": {
+      "title": "Converge-Elavon Migrator",
+      "properties": {
+        "converge-elavon.scanOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan for Converge endpoints when opening a workspace"
+        },
+        "converge-elavon.autoValidate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically validate migrations against Elavon sandbox"
+        },
+        "converge-elavon.copilotTimeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "Timeout for Copilot API calls in milliseconds"
+        },
+        "converge-elavon.maxRetries": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum number of retries for failed operations"
+        },
+        "converge-elavon.backupEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic backup creation before migrations"
+        },
+        "converge-elavon.maxBackupsPerFile": {
+          "type": "number",
+          "default": 5,
+          "description": "Maximum number of backups to keep per file"
+        },
+        "converge-elavon.logLevel": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error", "critical"],
+          "default": "info",
+          "description": "Logging level for the extension"
+        },
+        "converge-elavon.enablePerformanceMonitoring": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable performance monitoring and metrics collection"
+        },
+        "converge-elavon.maxLogEntries": {
+          "type": "number",
+          "default": 5000,
+          "description": "Maximum number of log entries to keep in memory"
+        },
+        "converge-elavon.maxErrorEntries": {
+          "type": "number",
+          "default": 1000,
+          "description": "Maximum number of error entries to keep in memory"
+        },
+        "converge-elavon.autoCleanupLogs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically clean up old logs to prevent memory issues"
+        },
+        "converge-elavon.cleanupInterval": {
+          "type": "number",
+          "default": 24,
+          "description": "Hours between automatic log cleanup (0 to disable)"
+        },
+        "converge-elavon.showMigrationPreview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show migration preview before applying changes"
+        },
+        "converge-elavon.confirmBulkMigration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Require confirmation before starting bulk migrations"
+        },
+        "converge-elavon.stopOnError": {
+          "type": "boolean",
+          "default": false,
+          "description": "Stop bulk migration if any endpoint fails"
+        },
+        "converge-elavon.includeComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include migration comments in generated code"
+        },
+        "converge-elavon.preserveFormatting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Preserve original code formatting when possible"
+        },
+        "converge-elavon.customMappingFile": {
+          "type": "string",
+          "default": "",
+          "description": "Path to custom mapping dictionary file (relative to workspace root)"
+        },
+        "converge-elavon.ignorePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["node_modules/**", ".git/**", "dist/**", "build/**"],
+          "description": "File patterns to ignore during scanning"
+        },
+        "converge-elavon.scanFileTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["js", "ts", "jsx", "tsx", "php", "py", "java", "cs", "rb", "go", "cpp", "c"],
+          "description": "File extensions to include in scanning"
+        },
+        "converge-elavon.maxFileSize": {
+          "type": "number",
+          "default": 1048576,
+          "description": "Maximum file size to scan in bytes (1MB default)"
+        },
+        "converge-elavon.confidenceThreshold": {
+          "type": "number",
+          "default": 0.7,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum confidence score for automatic migration suggestions"
+        },
+        "converge-elavon.enableTelemetry": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable anonymous usage telemetry to help improve the extension"
+        },
+        "converge-elavon.telemetryEndpoint": {
+          "type": "string",
+          "default": "https://api.converge-elavon-migrator.com/telemetry",
+          "description": "Telemetry endpoint URL (only used if telemetry is enabled)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "jest",
+    "test:unit": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^10.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "@vscode/test-electron": "^2.3.8",
+    "esbuild-loader": "^4.0.2",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "mocha": "^10.2.0",
+    "ts-jest": "^29.1.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@typescript-eslint/parser": "^6.13.1",
+    "axios": "^1.6.2",
+    "glob": "^10.3.10",
+    "monaco-editor": "^0.44.0",
+    "uuid": "^9.0.1",
+    "vscode-languageclient": "^9.0.1"
+  }
+}

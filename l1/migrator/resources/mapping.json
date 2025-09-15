@@ -1,0 +1,138 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-01T00:00:00.000Z",
+  "metadata": {
+    "author": "Converge-Elavon Migration Team",
+    "description": "Comprehensive mapping dictionary for migrating Converge APIs to Elavon APIs",
+    "tags": ["converge", "elavon", "migration", "payment-processing"]
+  },
+  "mappings": [
+    {
+      "convergeEndpoint": "/hosted-payments/transaction_token",
+      "elavonEndpoint": "/transactions",
+      "method": "POST",
+      "description": "Maps Converge hosted payment transaction tokens to Elavon transaction API",
+      "fieldMappings": {
+        "ssl_account_id": "processorAccount.id",
+        "ssl_user_id": "merchantAlias",
+        "ssl_pin": "apiKey.secret",
+        "ssl_transaction_type": "type",
+        "ssl_amount": "amount.total",
+        "ssl_tax_amount": "amount.tax",
+        "ssl_shipping_amount": "amount.shipping",
+        "ssl_currency_code": "amount.currency",
+        "ssl_invoice_number": "invoiceNumber",
+        "ssl_merchant_txn_id": "customReference",
+        "ssl_description": "description",
+        "ssl_customer_code": "customer.code",
+        "ssl_first_name": "customer.firstName",
+        "ssl_last_name": "customer.lastName",
+        "ssl_company": "customer.company",
+        "ssl_email": "customer.email",
+        "ssl_phone": "customer.phone",
+        "ssl_avs_address": "customer.address.line1",
+        "ssl_address2": "customer.address.line2",
+        "ssl_city": "customer.address.city",
+        "ssl_state": "customer.address.state",
+        "ssl_avs_zip": "customer.address.postalCode",
+        "ssl_country": "customer.address.country",
+        "ssl_card_number": "card.pan",
+        "ssl_exp_date": "card.expiry",
+        "ssl_cvv2cvc2": "card.securityCode",
+        "ssl_token": "paymentInstrument.token",
+        "ssl_add_token": "paymentInstrument.addToken",
+        "ssl_get_token": "paymentInstrument.getToken",
+        "ssl_void_transaction_id": "relatedTransactionId",
+        "ssl_recurring_flag": "recurring.enabled",
+        "ssl_recurring_id": "recurring.id"
+      },
+      "examples": [
+        {
+          "converge": {
+            "ssl_account_id": "123456",
+            "ssl_user_id": "merchant1",
+            "ssl_pin": "secret123",
+            "ssl_transaction_type": "ccsale",
+            "ssl_amount": "10.00"
+          },
+          "elavon": {
+            "processorAccount": { "id": "123456" },
+            "merchantAlias": "merchant1",
+            "apiKey": { "secret": "sk_test_..." },
+            "type": "sale",
+            "amount": { "total": "10.00" }
+          }
+        }
+      ]
+    },
+    {
+      "convergeEndpoint": "/Checkout.js",
+      "elavonEndpoint": "/payment-sessions",
+      "method": "POST",
+      "description": "Maps Converge checkout JavaScript integration to Elavon payment sessions",
+      "fieldMappings": {
+        "ssl_txn_auth_token": "sessionId",
+        "ssl_amount": "amount.total",
+        "ssl_currency_code": "amount.currency",
+        "ssl_first_name": "shopper.firstName",
+        "ssl_last_name": "shopper.lastName",
+        "ssl_email": "shopper.email",
+        "ssl_phone": "shopper.phone",
+        "ssl_avs_address": "shopper.address.line1",
+        "ssl_address2": "shopper.address.line2",
+        "ssl_city": "shopper.address.city",
+        "ssl_state": "shopper.address.state",
+        "ssl_avs_zip": "shopper.address.postalCode",
+        "ssl_country": "shopper.address.country",
+        "ssl_card_number": "card.pan",
+        "ssl_exp_date": "card.expiry",
+        "ssl_cvv2cvc2": "card.securityCode"
+      }
+    },
+    {
+      "convergeEndpoint": "/ProcessTransactionOnline",
+      "elavonEndpoint": "/orders",
+      "method": "POST",
+      "description": "Maps Converge ProcessTransactionOnline (Credit Card Sale operations) to Elavon Create Transaction endpoints",
+      "fieldMappings": {
+        "ssl_transaction_type": "type",
+        "ssl_amount": "amount.total",
+        "ssl_currency_code": "amount.currency",
+        "ssl_invoice_number": "invoiceNumber",
+        "ssl_merchant_txn_id": "customReference",
+        "ssl_description": "description",
+        "ssl_token": "paymentInstrument.token",
+        "ssl_add_token": "paymentInstrument.addToken",
+        "ssl_get_token": "paymentInstrument.getToken",
+        "ssl_void_transaction_id": "relatedTransactionId"
+      }
+    },
+    {
+      "convergeEndpoint": "/batch-processing",
+      "elavonEndpoint": "/batches",
+      "method": "POST",
+      "fieldMappings": {
+        "batch_file": "transactions[]",
+        "ssl_account_id": "processorAccount.id",
+        "ssl_user_id": "merchantAlias",
+        "ssl_batch_number": "batch.number",
+        "ssl_batch_date": "batch.date",
+        "ssl_total_amount": "batch.totalAmount",
+        "ssl_total_count": "batch.transactionCount"
+      }
+    },
+    {
+      "convergeEndpoint": "/NonElavonCertifiedDevice",
+      "elavonEndpoint": "/terminals",
+      "method": "GET",
+      "fieldMappings": {
+        "ssl_terminal_id": "id",
+        "ssl_device_name": "name",
+        "ssl_bin_number": "processorAccount.bin",
+        "ssl_status": "status",
+        "ssl_location": "location",
+        "ssl_last_update": "lastUpdated"
+      }
+    }
+  ]
+}

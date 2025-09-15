@@ -1,0 +1,50 @@
+{
+  "rules": [
+    {
+      "name": "SSL Field Detection",
+      "description": "Detect and transform SSL fields in Converge API calls",
+      "pattern": "ssl_[a-zA-Z_]+",
+      "action": "transform",
+      "conditions": [
+        {
+          "field": "context",
+          "operator": "contains",
+          "value": "converge"
+        }
+      ]
+    },
+    {
+      "name": "Deprecated Field Warning",
+      "description": "Warn about deprecated Converge fields",
+      "pattern": "ssl_deprecated_.*",
+      "action": "warn",
+      "replacement": "// WARNING: This field is deprecated in Elavon API"
+    },
+    {
+      "name": "Unsupported Field Error",
+      "description": "Error on unsupported Converge fields",
+      "pattern": "ssl_unsupported_.*",
+      "action": "error"
+    },
+    {
+      "name": "Comment Preservation",
+      "description": "Preserve existing comments during migration",
+      "pattern": "\\/\\*[\\s\\S]*?\\*\\/|\\/\\/.*",
+      "action": "ignore"
+    },
+    {
+      "name": "URL Transformation",
+      "description": "Transform Converge API URLs to Elavon equivalents",
+      "pattern": "https?:\\/\\/[^\\s]*converge[^\\s]*",
+      "action": "transform",
+      "replacement": "https://api.elavon.com"
+    }
+  ],
+  "globalSettings": {
+    "preserveComments": true,
+    "addMigrationComments": true,
+    "validateAfterMigration": true,
+    "backupOriginalFiles": true,
+    "generateMigrationReport": true
+  }
+}

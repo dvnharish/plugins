@@ -1,0 +1,27 @@
+{
+  "name": "@devguard/server",
+  "version": "1.0.0",
+  "description": "DevGuard LSP Server",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@devguard/shared": "workspace:*",
+    "@devguard/runners": "workspace:*",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0",
+    "rimraf": "^5.0.0"
+  }
+}

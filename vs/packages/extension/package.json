@@ -1,0 +1,189 @@
+{
+  "name": "devguard",
+  "displayName": "DevGuard",
+  "description": "VS Code Extension for Clean Code, Security & Testability - Created by Harish Duddupudi",
+  "version": "1.0.0",
+  "publisher": "harish-duddupudi",
+  "author": {
+    "name": "Harish Duddupudi",
+    "email": "harish.duddupudi@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harish-duddupudi/devguard"
+  },
+  "homepage": "https://github.com/harish-duddupudi/devguard#readme",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Linters",
+    "Other",
+    "Testing"
+  ],
+  "keywords": [
+    "security",
+    "code-quality",
+    "testing",
+    "static-analysis",
+    "devops"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "media/devguard-icon.svg",
+
+  "contributes": {
+    "commands": [
+      {
+        "command": "devguard.scanProject",
+        "title": "Scan Project",
+        "icon": "$(play)"
+      },
+      {
+        "command": "devguard.explainIssue",
+        "title": "Explain Issue"
+      },
+      {
+        "command": "devguard.fixWithCopilot",
+        "title": "Fix with Copilot"
+      },
+      {
+        "command": "devguard.showDiff",
+        "title": "Show Diff"
+      },
+      {
+        "command": "devguard.undoFix",
+        "title": "Undo Fix"
+      },
+      {
+        "command": "devguard.generateTests",
+        "title": "Generate JUnit Tests"
+      },
+      {
+        "command": "devguard.exportReport",
+        "title": "Export Report"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "devguardView",
+          "name": "DevGuard"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "devguard",
+          "title": "DevGuard",
+          "icon": "$(shield)"
+        }
+      ],
+      "panel": [
+        {
+          "id": "devguardPanel",
+          "title": "DevGuard Analysis",
+          "icon": "$(search)"
+        }
+      ]
+    },
+    "views": {
+      "devguard": [
+        {
+          "id": "devguardView",
+          "name": "DevGuard"
+        }
+      ],
+      "devguardPanel": [
+        {
+          "id": "devguardExplainView",
+          "name": "Issue Details"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "devguard.scanProject",
+          "when": "view == devguardView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "devguard.explainIssue",
+          "when": "view == devguardView && viewItem == issue",
+          "group": "inline"
+        },
+        {
+          "command": "devguard.fixWithCopilot",
+          "when": "view == devguardView && viewItem == issue",
+          "group": "inline"
+        },
+        {
+          "command": "devguard.showDiff",
+          "when": "view == devguardView && viewItem == issue",
+          "group": "inline"
+        },
+        {
+          "command": "devguard.undoFix",
+          "when": "view == devguardView && viewItem == issue",
+          "group": "inline"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "devguard.generateTests",
+          "when": "resourceExtname == .java",
+          "group": "devguard"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DevGuard",
+      "properties": {
+        "devguard.copilot.applyFix": {
+          "type": "string",
+          "enum": ["auto", "preview", "ask"],
+          "default": "auto",
+          "description": "How to apply fixes from Copilot"
+        },
+        "devguard.policy.minScore": {
+          "type": "number",
+          "default": 75,
+          "description": "Minimum production readiness score"
+        },
+        "devguard.ui.explainPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show explain panel for issues"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "@devguard/shared": "workspace:*",
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^2.4.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0",
+    "@vscode/vsce": "^3.0.0",
+    "rimraf": "^5.0.0"
+  }
+}

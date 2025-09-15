@@ -1,0 +1,32 @@
+{
+  "name": "devguard-cli",
+  "version": "1.0.0",
+  "description": "DevGuard Command Line Interface",
+  "main": "dist/index.js",
+  "bin": {
+    "devguard": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@devguard/shared": "workspace:*",
+    "@devguard/runners": "workspace:*",
+    "@devguard/server": "workspace:*",
+    "commander": "^11.0.0",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0",
+    "rimraf": "^5.0.0"
+  }
+}
