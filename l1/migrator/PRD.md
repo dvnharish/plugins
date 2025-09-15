@@ -239,26 +239,3 @@ sequenceDiagram
 
 ---
 
-## 9. Cursor AI Prompt (Development Scaffold)
-
-```
-You are an expert VS Code extension developer.  
-Build a VS Code plugin named "Converge-to-Elavon Migrator" with these features:
-
-- Use TypeScript + VS Code Extension API.
-- Panels: Scan, Credentials, Documentation, Migration Suggestions.
-- Detect Converge XML endpoints (transaction_token, Checkout.js, ProcessTransactionOnline, Batch Processing, Devices).
-- Map them to Elavon JSON endpoints using mapping.json.
-- Right-click "Migrate to Elavon" → send existing code + mapping rules to GitHub/OpenAI Copilot.
-- Copilot returns Elavon-compliant JSON code.
-- Show diff preview → update controller/service inline.
-- Securely store pk_/sk_ keys using VS Code Secret Storage.
-- Validate migrated code against Elavon sandbox (https://uat.api.converge.eu.elavonaws.com).
-- Scaffold structure:
-  /src/extension.ts
-  /src/panels/{ScanPanel, CredentialPanel, DocPanel, MigrationPanel}.ts
-  /src/services/{CopilotService, ParserService}.ts
-  /resources/mapping.json
-  package.json
-  README.md
-```
