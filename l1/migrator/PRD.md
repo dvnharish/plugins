@@ -1,9 +1,4 @@
-Got it ✅ Harish — I’ll bundle **everything we’ve built so far** into a single comprehensive file.
-This file can serve as the **master PRD + design + mapping dictionary** for your VS Code plugin project.
-
----
-
-# 📑 VS Code Plugin – Converge → Elavon Migration (Master Document)
+# 📑 VS Code Plugin – Converge → Elavon Migration PRD
 
 ---
 
