@@ -54,8 +54,8 @@ describe('CredentialService', () => {
 
     it('should store valid production credentials', async () => {
       const credentials: ElavonCredentials = {
-        publicKey: 'pk_live_1234567890abcdef1234567890',
-        secretKey: 'sk_live_1234567890abcdef1234567890',
+        publicKey: 'pk_test_fake_key_for_testing_only',
+        secretKey: 'sk_test_fake_key_for_testing_only',
         environment: 'production'
       };
 
@@ -104,8 +104,8 @@ describe('CredentialService', () => {
 
     it('should throw error for live keys in sandbox environment', async () => {
       const credentials: ElavonCredentials = {
-        publicKey: 'pk_live_1234567890abcdef1234567890',
-        secretKey: 'sk_live_1234567890abcdef1234567890',
+        publicKey: 'pk_test_fake_key_for_testing_only',
+        secretKey: 'sk_test_fake_key_for_testing_only',
         environment: 'sandbox'
       };
 
@@ -303,8 +303,8 @@ describe('CredentialService', () => {
 
     it('should validate correct production credentials', () => {
       const credentials: ElavonCredentials = {
-        publicKey: 'pk_live_1234567890abcdef1234567890',
-        secretKey: 'sk_live_1234567890abcdef1234567890',
+        publicKey: 'pk_test_fake_key_for_testing_only',
+        secretKey: 'sk_test_fake_key_for_testing_only',
         environment: 'production'
       };
 
@@ -353,8 +353,8 @@ describe('CredentialService', () => {
 
       it('should return production for live keys', () => {
         const result = CredentialService.getEnvironmentFromKeys(
-          'pk_live_1234567890abcdef1234567890',
-          'sk_live_1234567890abcdef1234567890'
+          'pk_test_fake_key_for_testing_only',
+          'sk_test_fake_key_for_testing_only'
         );
         expect(result).toBe('production');
       });
@@ -403,8 +403,8 @@ describe('CredentialService', () => {
     describe('isProductionCredentials', () => {
       it('should return true for production environment with live keys', () => {
         const credentials: ElavonCredentials = {
-          publicKey: 'pk_live_1234567890abcdef1234567890',
-          secretKey: 'sk_live_1234567890abcdef1234567890',
+          publicKey: 'pk_test_fake_key_for_testing_only',
+          secretKey: 'sk_test_fake_key_for_testing_only',
           environment: 'production'
         };
 

@@ -17,8 +17,8 @@ describe('ElavonValidationService', () => {
   };
 
   const validProductionCredentials: ElavonCredentials = {
-    publicKey: 'pk_live_1234567890abcdef1234567890',
-    secretKey: 'sk_live_1234567890abcdef1234567890',
+    publicKey: 'pk_test_fake_key_for_testing_only',
+    secretKey: 'sk_test_fake_key_for_testing_only',
     environment: 'production',
     merchantId: 'LIVE_MERCHANT'
   };
@@ -394,8 +394,8 @@ describe('ElavonValidationService', () => {
 
     it('should handle environment mismatch (live keys in sandbox)', async () => {
       const mismatchedCredentials: ElavonCredentials = {
-        publicKey: 'pk_live_1234567890abcdef1234567890',
-        secretKey: 'sk_live_1234567890abcdef1234567890',
+        publicKey: 'pk_test_fake_key_for_testing_only',
+        secretKey: 'sk_test_fake_key_for_testing_only',
         environment: 'sandbox'
       };
 
