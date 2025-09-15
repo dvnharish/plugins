@@ -1,7 +1,7 @@
 {
   "name": "converge-elavon-migrator",
   "displayName": "Converge to Elavon Migrator",
-  "description": "Automate migration of legacy Converge APIs to modern Elavon APIs with AI assistance",
+  "description": "🚀 AI-powered VS Code extension for seamless migration from Converge to Elavon payment APIs. Features intelligent code analysis, automated migration, multi-language support, and real-time validation.",
   "version": "1.0.0",
   "publisher": "converge-elavon",
   "engines": {
