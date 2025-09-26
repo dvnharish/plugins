@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ServiceContainer } from './ServiceContainer';
-import { EndpointMapping } from '../types/EndpointMapping';
+// Removed unused import
 import { ConvergeEndpoint } from '../types/ConvergeEndpoint';
 import { ScanResult } from '../services/WorkspaceScannerService';
+import { SimpleScannerService } from '../services/SimpleScannerService';
 
 /**
  * Manages registration and handling of VS Code commands
@@ -11,6 +12,8 @@ import { ScanResult } from '../services/WorkspaceScannerService';
 export class CommandRegistry implements vscode.Disposable {
   private readonly disposables: vscode.Disposable[] = [];
   private statusBarItem: vscode.StatusBarItem;
+  private panelManager?: any; // Will be set by ExtensionManager
+  private isScanning = false; // Track scan state
 
   constructor(private readonly _serviceContainer: ServiceContainer) {
     // Create status bar item
@@ -20,8 +23,15 @@ export class CommandRegistry implements vscode.Disposable {
     );
     this.statusBarItem.text = "$(arrow-swap) Converge→Elavon";
     this.statusBarItem.tooltip = "Converge to Elavon Migrator";
-    this.statusBarItem.command = 'converge-elavon.scanProject';
+    this.statusBarItem.command = 'elavonx.scanProject';
     this.disposables.push(this.statusBarItem);
+  }
+
+  /**
+   * Set the panel manager reference
+   */
+  public setPanelManager(panelManager: any): void {
+    this.panelManager = panelManager;
   }
 
   /**
@@ -34,7 +44,7 @@ export class CommandRegistry implements vscode.Disposable {
     // Register all commands
     // Scan project command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.scanProject', async () => {
+      vscode.commands.registerCommand('elavonx.scanProject', async () => {
         try {
           await this.handleScanProject();
         } catch (error) {
@@ -46,7 +56,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Migrate endpoint command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.migrateEndpoint', async () => {
+      vscode.commands.registerCommand('elavonx.migrateEndpoint', async () => {
         try {
           await this.handleMigrateEndpoint();
         } catch (error) {
@@ -58,7 +68,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Bulk migrate command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.bulkMigrate', async () => {
+      vscode.commands.registerCommand('elavonx.bulkMigrate', async () => {
         try {
           await this.handleBulkMigrate();
         } catch (error) {
@@ -70,7 +80,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Validate migration command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.validateMigration', async () => {
+      vscode.commands.registerCommand('elavonx.validateMigration', async () => {
         try {
           await this.handleValidateMigration();
         } catch (error) {
@@ -82,7 +92,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Open credentials command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.openCredentials', async () => {
+      vscode.commands.registerCommand('elavonx.openCredentials', async () => {
         try {
           await this.handleOpenCredentials();
         } catch (error) {
@@ -94,7 +104,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Show documentation command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.showDocumentation', async () => {
+      vscode.commands.registerCommand('elavonx.showDocumentation', async () => {
         try {
           await this.handleShowDocumentation();
         } catch (error) {
@@ -106,7 +116,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Refresh endpoints command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.refreshEndpoints', async () => {
+      vscode.commands.registerCommand('elavonx.refreshEndpoints', async () => {
         try {
           await this.handleRefreshEndpoints();
         } catch (error) {
@@ -118,7 +128,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Clear credentials command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.clearCredentials', async () => {
+      vscode.commands.registerCommand('elavonx.clearCredentials', async () => {
         try {
           await this.handleClearCredentials();
         } catch (error) {
@@ -130,7 +140,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Show mapping dictionary command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.showMappingDictionary', async () => {
+      vscode.commands.registerCommand('elavonx.showMappingDictionary', async () => {
         try {
           await this.handleShowMappingDictionary();
         } catch (error) {
@@ -142,7 +152,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Reload mappings command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.reloadMappings', async () => {
+      vscode.commands.registerCommand('elavonx.reloadMappings', async () => {
         try {
           await this.handleReloadMappings();
         } catch (error) {
@@ -154,7 +164,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Migration history commands
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.showMigrationHistory', async () => {
+      vscode.commands.registerCommand('elavonx.showMigrationHistory', async () => {
         try {
           await this.handleShowMigrationHistory();
         } catch (error) {
@@ -165,7 +175,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.rollbackMigration', async () => {
+      vscode.commands.registerCommand('elavonx.rollbackMigration', async () => {
         try {
           await this.handleRollbackMigration();
         } catch (error) {
@@ -176,7 +186,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.clearMigrationHistory', async () => {
+      vscode.commands.registerCommand('elavonx.clearMigrationHistory', async () => {
         try {
           await this.handleClearMigrationHistory();
         } catch (error) {
@@ -187,7 +197,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.exportMigrationHistory', async () => {
+      vscode.commands.registerCommand('elavonx.exportMigrationHistory', async () => {
         try {
           await this.handleExportMigrationHistory();
         } catch (error) {
@@ -197,8 +207,32 @@ export class CommandRegistry implements vscode.Disposable {
       })
     );
 
+    // Generate report command
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.importMigrationHistory', async () => {
+      vscode.commands.registerCommand('elavonx.generateReport', async () => {
+        try {
+          await this.handleGenerateReport();
+        } catch (error) {
+          console.error('Error generating report:', error);
+          vscode.window.showErrorMessage('Failed to generate migration report');
+        }
+      })
+    );
+
+    // Export report command
+    this.disposables.push(
+      vscode.commands.registerCommand('elavonx.exportReport', async () => {
+        try {
+          await this.handleExportReport();
+        } catch (error) {
+          console.error('Error exporting report:', error);
+          vscode.window.showErrorMessage('Failed to export report');
+        }
+      })
+    );
+
+    this.disposables.push(
+      vscode.commands.registerCommand('elavonx.importMigrationHistory', async () => {
         try {
           await this.handleImportMigrationHistory();
         } catch (error) {
@@ -210,7 +244,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Error handling and logging commands
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.showErrorLog', async () => {
+      vscode.commands.registerCommand('elavonx.showErrorLog', async () => {
         try {
           await this.handleShowErrorLog();
         } catch (error) {
@@ -221,7 +255,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.showPerformanceMetrics', async () => {
+      vscode.commands.registerCommand('elavonx.showPerformanceMetrics', async () => {
         try {
           await this.handleShowPerformanceMetrics();
         } catch (error) {
@@ -232,7 +266,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.clearErrorLog', async () => {
+      vscode.commands.registerCommand('elavonx.clearErrorLog', async () => {
         try {
           await this.handleClearErrorLog();
         } catch (error) {
@@ -243,7 +277,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.exportErrorLog', async () => {
+      vscode.commands.registerCommand('elavonx.exportErrorLog', async () => {
         try {
           await this.handleExportErrorLog();
         } catch (error) {
@@ -255,7 +289,7 @@ export class CommandRegistry implements vscode.Disposable {
 
     // Configuration management commands
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.showConfiguration', async () => {
+      vscode.commands.registerCommand('elavonx.showConfiguration', async () => {
         try {
           await this.handleShowConfiguration();
         } catch (error) {
@@ -266,7 +300,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.resetConfiguration', async () => {
+      vscode.commands.registerCommand('elavonx.resetConfiguration', async () => {
         try {
           await this.handleResetConfiguration();
         } catch (error) {
@@ -277,7 +311,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.exportConfiguration', async () => {
+      vscode.commands.registerCommand('elavonx.exportConfiguration', async () => {
         try {
           await this.handleExportConfiguration();
         } catch (error) {
@@ -288,7 +322,7 @@ export class CommandRegistry implements vscode.Disposable {
     );
 
     this.disposables.push(
-      vscode.commands.registerCommand('converge-elavon.importConfiguration', async () => {
+      vscode.commands.registerCommand('elavonx.importConfiguration', async () => {
         try {
           await this.handleImportConfiguration();
         } catch (error) {
@@ -300,12 +334,22 @@ export class CommandRegistry implements vscode.Disposable {
   }
 
   private async handleScanProject(): Promise<void> {
+    console.log('🔍 Scan project command triggered');
+    
+    // Check if already scanning
+    if (this.isScanning) {
+      console.log('⚠️ Scan already in progress, ignoring duplicate request');
+      vscode.window.showWarningMessage('Scan is already in progress. Please wait for it to complete.');
+      return;
+    }
+    
     // Check if workspace is open
     if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
       vscode.window.showWarningMessage('Please open a workspace or folder to scan for Converge endpoints');
       return;
     }
 
+    this.isScanning = true;
     const parserService = this._serviceContainer.getParserService();
     
     await vscode.window.withProgress({
@@ -314,44 +358,37 @@ export class CommandRegistry implements vscode.Disposable {
       cancellable: true
     }, async (progress, token) => {
       try {
-        // Get scan recommendations first
-        const recommendations = await parserService.getScanRecommendations();
+        console.log('🚀 Starting scan process...');
         
-        // Show scan info if it's a large workspace
-        if (recommendations.estimatedFileCount > 1000) {
-          const choice = await vscode.window.showWarningMessage(
-            `Large workspace detected (${recommendations.estimatedFileCount} files). Estimated scan time: ${Math.round(recommendations.estimatedScanTime / 1000)}s. Continue?`,
-            'Scan Anyway',
-            'Cancel'
-          );
-          
-          if (choice !== 'Scan Anyway') {
-            return;
-          }
-        }
+        // Skip recommendations for now to avoid getting stuck
+        // const recommendations = await parserService.getScanRecommendations();
+        
+        // Clear any existing cache to ensure fresh scan
+        parserService.clearScanCache();
+        console.log('🧹 Cleared scan cache');
 
-        // Scan with progress reporting
-        const result = await parserService.scanWorkspace({
-          useCache: true,
-          cancellationToken: token,
-          progressCallback: (scanProgress) => {
-            const percentage = Math.round((scanProgress.filesProcessed / scanProgress.totalFiles) * 100);
-            progress.report({ 
-              increment: percentage, 
-              message: `${scanProgress.phase === 'scanning' ? 'Scanning' : 'Processing'} ${scanProgress.currentFile} (${scanProgress.filesProcessed}/${scanProgress.totalFiles})` 
-            });
-          }
-        });
+        // Try simple scanner first to avoid getting stuck
+        console.log('📊 Starting simple workspace scan...');
+        const simpleScanner = new SimpleScannerService();
+        const result = await simpleScanner.scanWorkspace();
+        
+        console.log(`✅ Scan completed: ${result.endpoints.length} endpoints found`);
         
         if (token.isCancellationRequested) {
+          console.log('❌ Scan cancelled by user');
           return;
         }
 
         // Update status bar with results
         if (result.endpoints.length > 0) {
-          await vscode.commands.executeCommand('setContext', 'converge-elavon.hasEndpoints', true);
+          await vscode.commands.executeCommand('setContext', 'elavonx.hasEndpoints', true);
           this.statusBarItem.text = `$(arrow-swap) ${result.endpoints.length} Converge endpoints`;
           this.statusBarItem.tooltip = `Found ${result.endpoints.length} Converge endpoint(s) - Click to rescan`;
+          
+          // Update panel views
+          if (this.panelManager) {
+            this.panelManager.updateScanView(result.endpoints);
+          }
           
           // Show detailed results with scan statistics
           const scanStats = `Scanned ${result.scannedFiles} files in ${Math.round(result.scanDuration / 1000)}s (${result.cacheHits} cache hits)`;
@@ -370,9 +407,14 @@ export class CommandRegistry implements vscode.Disposable {
             await this.showScanErrors(result.errors);
           }
         } else {
-          await vscode.commands.executeCommand('setContext', 'converge-elavon.hasEndpoints', false);
+          await vscode.commands.executeCommand('setContext', 'elavonx.hasEndpoints', false);
           this.statusBarItem.text = "$(arrow-swap) No Converge endpoints";
           this.statusBarItem.tooltip = "No Converge endpoints found - Click to rescan";
+          
+          // Update panel views
+          if (this.panelManager) {
+            this.panelManager.clearScanView();
+          }
           
           const scanStats = `Scanned ${result.scannedFiles} files in ${Math.round(result.scanDuration / 1000)}s`;
           if (result.errors.length > 0) {
@@ -385,6 +427,10 @@ export class CommandRegistry implements vscode.Disposable {
       } catch (error) {
         console.error('Error during project scan:', error);
         vscode.window.showErrorMessage(`Failed to scan project: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        // Always reset scanning state
+        this.isScanning = false;
+        console.log('🏁 Scan process completed, state reset');
       }
     });
   }
@@ -642,7 +688,7 @@ export class CommandRegistry implements vscode.Disposable {
 
   private async handleBulkMigrate(): Promise<void> {
     // Check if endpoints were found
-    const hasEndpoints = vscode.workspace.getConfiguration().get('converge-elavon.hasEndpoints', false);
+    const hasEndpoints = vscode.workspace.getConfiguration().get('elavonx.hasEndpoints', false);
     if (!hasEndpoints) {
       const choice = await vscode.window.showWarningMessage(
         'No Converge endpoints found. Scan project first?',
@@ -1568,13 +1614,88 @@ Telemetry:
       return;
     }
 
-    // TODO: Implement validation logic
-    vscode.window.showInformationMessage('Migration validation functionality will be implemented');
+    // Implement migration validation logic
+    try {
+      const migrationService = this._serviceContainer.getMigrationService();
+      const migrationHistory = migrationService.getMigrationHistory();
+      
+      if (migrationHistory.entries.length === 0) {
+        vscode.window.showInformationMessage('No migrations found to validate. Run a migration first.');
+        return;
+      }
+
+      // Validate each migration entry
+      const validationResults = [];
+      let validCount = 0;
+      let invalidCount = 0;
+
+      for (const entry of migrationHistory.entries) {
+        try {
+          // Basic validation checks
+          const isValid = this.validateMigrationEntry(entry);
+          validationResults.push({
+            id: entry.id,
+            filePath: entry.filePath,
+            status: entry.status,
+            isValid,
+            issues: isValid ? [] : this.getValidationIssues(entry)
+          });
+
+          if (isValid) {
+            validCount++;
+          } else {
+            invalidCount++;
+          }
+        } catch (error) {
+          validationResults.push({
+            id: entry.id,
+            filePath: entry.filePath,
+            status: entry.status,
+            isValid: false,
+            issues: [`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`]
+          });
+          invalidCount++;
+        }
+      }
+
+      // Show validation results
+      const message = `Migration Validation Complete:\n✅ Valid: ${validCount}\n❌ Invalid: ${invalidCount}\n📊 Total: ${validationResults.length}`;
+      
+      if (invalidCount > 0) {
+        const action = await vscode.window.showWarningMessage(
+          message,
+          'View Details',
+          'Export Report'
+        );
+        
+        if (action === 'View Details') {
+          await this.showValidationDetails(validationResults);
+        } else if (action === 'Export Report') {
+          await this.exportValidationReport(validationResults);
+        }
+      } else {
+        vscode.window.showInformationMessage(message);
+      }
+
+    } catch (error) {
+      console.error('Migration validation failed:', error);
+      vscode.window.showErrorMessage(`Migration validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async handleOpenCredentials(): Promise<void> {
-    // TODO: Implement credentials panel opening
-    vscode.window.showInformationMessage('Credentials panel functionality will be implemented');
+    try {
+      // Open the credentials panel
+      if (this.panelManager) {
+        await this.panelManager.openCredentialsPanel();
+        vscode.window.showInformationMessage('Credentials panel opened');
+      } else {
+        vscode.window.showErrorMessage('Panel manager not available');
+      }
+    } catch (error) {
+      console.error('Failed to open credentials panel:', error);
+      vscode.window.showErrorMessage(`Failed to open credentials panel: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async handleShowDocumentation(): Promise<void> {
@@ -1607,7 +1728,7 @@ Telemetry:
     const parserService = this._serviceContainer.getParserService();
     parserService.clearScanCache();
     
-    await vscode.commands.executeCommand('setContext', 'converge-elavon.hasEndpoints', false);
+    await vscode.commands.executeCommand('setContext', 'elavonx.hasEndpoints', false);
     await this.handleScanProject();
   }
 
@@ -1946,6 +2067,167 @@ These files were skipped during scanning. Common causes:
     `.trim();
 
     vscode.window.showWarningMessage(details, { modal: true });
+  }
+
+  /**
+   * Handle generate report command
+   */
+  private async handleGenerateReport(): Promise<void> {
+    if (!this.panelManager) {
+      vscode.window.showErrorMessage('Panel manager not available');
+      return;
+    }
+
+    try {
+      await this.panelManager.generateReport();
+      vscode.window.showInformationMessage('Migration report generated successfully');
+    } catch (error) {
+      console.error('Error generating report:', error);
+      vscode.window.showErrorMessage('Failed to generate migration report');
+    }
+  }
+
+  /**
+   * Handle export report command
+   */
+  private async handleExportReport(): Promise<void> {
+    if (!this.panelManager) {
+      vscode.window.showErrorMessage('Panel manager not available');
+      return;
+    }
+
+    try {
+      const format = await vscode.window.showQuickPick(
+        ['markdown', 'sarif', 'json', 'csv'],
+        {
+          placeHolder: 'Select export format',
+          title: 'Export Report Format'
+        }
+      );
+
+      if (format) {
+        await this.panelManager.exportReport(format);
+        vscode.window.showInformationMessage(`Report exported as ${format.toUpperCase()}`);
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      vscode.window.showErrorMessage('Failed to export report');
+    }
+  }
+
+  /**
+   * Validate a migration entry
+   */
+  private validateMigrationEntry(entry: any): boolean {
+    // Basic validation checks
+    if (!entry.id || !entry.filePath || !entry.status) {
+      return false;
+    }
+
+    // Check if file still exists
+    try {
+      const fs = require('fs');
+      if (!fs.existsSync(entry.filePath)) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
+    // Check if migration was successful
+    if (entry.status !== 'success') {
+      return false;
+    }
+
+    // Check if migrated code is valid
+    if (!entry.migratedCode || entry.migratedCode.trim().length === 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Get validation issues for a migration entry
+   */
+  private getValidationIssues(entry: any): string[] {
+    const issues: string[] = [];
+
+    if (!entry.id) {
+      issues.push('Missing migration ID');
+    }
+
+    if (!entry.filePath) {
+      issues.push('Missing file path');
+    }
+
+    if (!entry.status) {
+      issues.push('Missing migration status');
+    }
+
+    if (entry.status !== 'success') {
+      issues.push(`Migration failed: ${entry.errorMessage || 'Unknown error'}`);
+    }
+
+    if (!entry.migratedCode || entry.migratedCode.trim().length === 0) {
+      issues.push('Empty migrated code');
+    }
+
+    try {
+      const fs = require('fs');
+      if (!fs.existsSync(entry.filePath)) {
+        issues.push('File no longer exists');
+      }
+    } catch {
+      issues.push('Cannot verify file existence');
+    }
+
+    return issues;
+  }
+
+  /**
+   * Show validation details in a new document
+   */
+  private async showValidationDetails(validationResults: any[]): Promise<void> {
+    const content = validationResults.map(result => {
+      const status = result.isValid ? '✅' : '❌';
+      const issues = result.issues.length > 0 ? `\n  Issues: ${result.issues.join(', ')}` : '';
+      return `${status} ${result.filePath} (${result.status})${issues}`;
+    }).join('\n');
+
+    const document = await vscode.workspace.openTextDocument({
+      content: `Migration Validation Results\n${'='.repeat(50)}\n\n${content}`,
+      language: 'plaintext'
+    });
+
+    await vscode.window.showTextDocument(document);
+  }
+
+  /**
+   * Export validation report to file
+   */
+  private async exportValidationReport(validationResults: any[]): Promise<void> {
+    const report = {
+      timestamp: new Date().toISOString(),
+      totalMigrations: validationResults.length,
+      validMigrations: validationResults.filter(r => r.isValid).length,
+      invalidMigrations: validationResults.filter(r => !r.isValid).length,
+      results: validationResults
+    };
+
+    const content = JSON.stringify(report, null, 2);
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.file('migration-validation-report.json'),
+      filters: {
+        'JSON Files': ['json'],
+        'All Files': ['*']
+      }
+    });
+
+    if (uri) {
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(content));
+      vscode.window.showInformationMessage(`Validation report exported to ${uri.fsPath}`);
+    }
   }
 
   public dispose(): void {

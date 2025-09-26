@@ -122,20 +122,34 @@ export class WorkspaceScannerService {
         });
 
         try {
+          console.log(`📄 Processing file ${i + 1}/${allFiles.length}: ${relativePath}`);
+          
           // Check cache first
           if (useCache) {
             const cached = await this.getCachedResult(filePath);
             if (cached) {
               allEndpoints.push(...cached.endpoints);
               cacheHits++;
+              scannedFiles++;
               continue;
             }
           }
 
-          // Parse file
-          const endpoints = await this.parserService.parseFile(filePath);
+          // Parse file with timeout
+          const parsePromise = this.parserService.parseFile(filePath);
+          const timeoutPromise = new Promise<ConvergeEndpoint[]>((_, reject) => {
+            setTimeout(() => reject(new Error('Parse timeout')), 5000); // 5 second timeout
+          });
+          
+          const endpoints = await Promise.race([parsePromise, timeoutPromise]);
           
           if (endpoints.length > 0) {
+            console.log(`🔍 Found ${endpoints.length} endpoints in ${relativePath}:`);
+            endpoints.forEach((endpoint, index) => {
+              console.log(`  ${index + 1}. Type: ${endpoint.endpointType}, Line: ${endpoint.lineNumber}`);
+              console.log(`     Code: ${endpoint.code?.substring(0, 100)}...`);
+            });
+            
             allEndpoints.push(...endpoints);
             
             // Cache results
@@ -146,6 +160,7 @@ export class WorkspaceScannerService {
 
           scannedFiles++;
         } catch (error) {
+          console.error(`❌ Error processing file ${relativePath}:`, error);
           errors.push({
             filePath: relativePath,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -156,6 +171,25 @@ export class WorkspaceScannerService {
       }
 
       const scanDuration = Date.now() - startTime;
+
+      // Debug: Show summary of what was found
+      console.log(`📊 Scan Summary:`);
+      console.log(`  Total endpoints found: ${allEndpoints.length}`);
+      console.log(`  Files scanned: ${scannedFiles}`);
+      console.log(`  Cache hits: ${cacheHits}`);
+      console.log(`  Duration: ${scanDuration}ms`);
+      
+      if (allEndpoints.length > 0) {
+        console.log(`📋 Endpoint breakdown:`);
+        const typeCounts = allEndpoints.reduce((acc, ep) => {
+          acc[ep.endpointType] = (acc[ep.endpointType] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        Object.entries(typeCounts).forEach(([type, count]) => {
+          console.log(`  ${type}: ${count}`);
+        });
+      }
 
       progressCallback?.({
         phase: 'complete',

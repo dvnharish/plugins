@@ -45,7 +45,7 @@ interface ScanPanelState {
  * Webview provider for the scan panel
  */
 export class ScanPanelProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'convergeElavonMigrator.scanPanel';
+  public static readonly viewType = 'elavonx.scanPanel';
 
   private _view?: vscode.WebviewView;
   private _scannerService: WorkspaceScannerService;

@@ -620,10 +620,11 @@ export class MonitoringAnalyticsService {
                 return `Average response time: ${this.performanceMetrics.averageResponseTime.toFixed(0)}ms, Memory usage: ${this.performanceMetrics.averageMemoryUsage.toFixed(1)}MB`;
             case 'usage':
                 return `Active users: ${this.usageAnalytics.activeUsers}, Total sessions: ${this.usageAnalytics.totalSessions}`;
-            case 'health':
+            case 'health': {
                 const healthyServices = Array.from(this.healthStatuses.values()).filter(s => s.status === 'healthy').length;
                 const totalServices = this.healthStatuses.size;
                 return `${healthyServices}/${totalServices} services are healthy`;
+            }
             case 'comprehensive':
                 return `Comprehensive report covering migration, performance, usage, and health metrics`;
             default:

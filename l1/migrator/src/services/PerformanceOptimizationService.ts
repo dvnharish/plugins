@@ -142,7 +142,7 @@ export class PerformanceOptimizationService {
     private optimizationRules: Map<string, OptimizationRule> = new Map();
     private backgroundTasks: Map<string, BackgroundTask> = new Map();
     private memoryPools: Map<string, MemoryPool<any>> = new Map();
-    private cleanupTimer?: NodeJS.Timeout;
+    private cleanupTimer?: any;
 
     constructor(
         context: vscode.ExtensionContext,

@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Interface for Elavon API credentials
@@ -11,65 +13,60 @@ export interface ElavonCredentials {
 }
 
 /**
- * Service for secure credential management using VS Code Secret Storage
+ * Service for credential management using local file storage
  */
 export class CredentialService {
-  private static readonly STORAGE_KEYS = {
-    PUBLIC_KEY: 'converge-migrator.elavon.publicKey',
-    SECRET_KEY: 'converge-migrator.elavon.secretKey',
-    ENVIRONMENT: 'converge-migrator.elavon.environment',
-    MERCHANT_ID: 'converge-migrator.elavon.merchantId'
-  };
+  private static readonly CREDENTIALS_FILE = 'elavon-credentials.json';
 
   private static readonly KEY_PATTERNS = {
     PUBLIC_KEY: /^pk_(test_|live_)?[a-zA-Z0-9]{24,}$/,
     SECRET_KEY: /^sk_(test_|live_)?[a-zA-Z0-9]{24,}$/
   };
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  private readonly credentialsPath: string;
+
+  constructor(private readonly context: vscode.ExtensionContext) {
+    // Store credentials in the extension's global storage directory
+    this.credentialsPath = path.join(context.globalStorageUri.fsPath, CredentialService.CREDENTIALS_FILE);
+  }
 
   /**
-   * Store Elavon credentials securely
+   * Store Elavon credentials locally
    */
   async storeCredentials(credentials: ElavonCredentials): Promise<void> {
     // Validate credentials before storing
     this.validateCredentials(credentials);
 
     try {
-      // Store each credential component separately for better security
-      await this.context.secrets.store(
-        CredentialService.STORAGE_KEYS.PUBLIC_KEY,
-        credentials.publicKey
-      );
-
-      await this.context.secrets.store(
-        CredentialService.STORAGE_KEYS.SECRET_KEY,
-        credentials.secretKey
-      );
-
-      await this.context.secrets.store(
-        CredentialService.STORAGE_KEYS.ENVIRONMENT,
-        credentials.environment
-      );
-
-      if (credentials.merchantId) {
-        await this.context.secrets.store(
-          CredentialService.STORAGE_KEYS.MERCHANT_ID,
-          credentials.merchantId
-        );
+      // Ensure the directory exists
+      const dir = path.dirname(this.credentialsPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
+
+      // Store credentials in a local JSON file
+      const credentialsData = {
+        publicKey: credentials.publicKey,
+        secretKey: credentials.secretKey,
+        environment: credentials.environment,
+        merchantId: credentials.merchantId,
+        lastUpdated: new Date().toISOString()
+      };
+
+      fs.writeFileSync(this.credentialsPath, JSON.stringify(credentialsData, null, 2), 'utf8');
 
       // Log successful storage (without sensitive data)
       console.log('Elavon credentials stored successfully', {
         environment: credentials.environment,
         hasPublicKey: !!credentials.publicKey,
         hasSecretKey: !!credentials.secretKey,
-        hasMerchantId: !!credentials.merchantId
+        hasMerchantId: !!credentials.merchantId,
+        filePath: this.credentialsPath
       });
 
     } catch (error) {
       console.error('Failed to store Elavon credentials:', error);
-      throw new Error('Failed to store credentials securely');
+      throw new Error('Failed to store credentials locally');
     }
   }
 
@@ -78,26 +75,28 @@ export class CredentialService {
    */
   async retrieveCredentials(): Promise<ElavonCredentials | null> {
     try {
-      const [publicKey, secretKey, environment, merchantId] = await Promise.all([
-        this.context.secrets.get(CredentialService.STORAGE_KEYS.PUBLIC_KEY),
-        this.context.secrets.get(CredentialService.STORAGE_KEYS.SECRET_KEY),
-        this.context.secrets.get(CredentialService.STORAGE_KEYS.ENVIRONMENT),
-        this.context.secrets.get(CredentialService.STORAGE_KEYS.MERCHANT_ID)
-      ]);
+      // Check if credentials file exists
+      if (!fs.existsSync(this.credentialsPath)) {
+        return null;
+      }
+
+      // Read and parse credentials file
+      const fileContent = fs.readFileSync(this.credentialsPath, 'utf8');
+      const credentialsData = JSON.parse(fileContent);
 
       // Return null if essential credentials are missing
-      if (!publicKey || !secretKey || !environment) {
+      if (!credentialsData.publicKey || !credentialsData.secretKey || !credentialsData.environment) {
         return null;
       }
 
       const credentials: ElavonCredentials = {
-        publicKey,
-        secretKey,
-        environment: environment as 'sandbox' | 'production'
+        publicKey: credentialsData.publicKey,
+        secretKey: credentialsData.secretKey,
+        environment: credentialsData.environment as 'sandbox' | 'production'
       };
 
-      if (merchantId) {
-        credentials.merchantId = merchantId;
+      if (credentialsData.merchantId) {
+        credentials.merchantId = credentialsData.merchantId;
       }
 
       // Validate retrieved credentials
@@ -116,12 +115,15 @@ export class CredentialService {
    */
   async hasCredentials(): Promise<boolean> {
     try {
-      const [publicKey, secretKey] = await Promise.all([
-        this.context.secrets.get(CredentialService.STORAGE_KEYS.PUBLIC_KEY),
-        this.context.secrets.get(CredentialService.STORAGE_KEYS.SECRET_KEY)
-      ]);
+      // Check if credentials file exists and has valid content
+      if (!fs.existsSync(this.credentialsPath)) {
+        return false;
+      }
 
-      return !!(publicKey && secretKey);
+      const fileContent = fs.readFileSync(this.credentialsPath, 'utf8');
+      const credentialsData = JSON.parse(fileContent);
+
+      return !!(credentialsData.publicKey && credentialsData.secretKey);
     } catch (error) {
       console.error('Failed to check credential existence:', error);
       return false;
@@ -133,12 +135,10 @@ export class CredentialService {
    */
   async clearCredentials(): Promise<void> {
     try {
-      await Promise.all([
-        this.context.secrets.delete(CredentialService.STORAGE_KEYS.PUBLIC_KEY),
-        this.context.secrets.delete(CredentialService.STORAGE_KEYS.SECRET_KEY),
-        this.context.secrets.delete(CredentialService.STORAGE_KEYS.ENVIRONMENT),
-        this.context.secrets.delete(CredentialService.STORAGE_KEYS.MERCHANT_ID)
-      ]);
+      // Delete the credentials file if it exists
+      if (fs.existsSync(this.credentialsPath)) {
+        fs.unlinkSync(this.credentialsPath);
+      }
 
       console.log('Elavon credentials cleared successfully');
     } catch (error) {
@@ -154,17 +154,26 @@ export class CredentialService {
     field: keyof ElavonCredentials,
     value: string
   ): Promise<void> {
-    const storageKey = this.getStorageKeyForField(field);
-    
-    if (!storageKey) {
-      throw new Error(`Invalid credential field: ${field}`);
-    }
-
     // Validate the specific field
     this.validateCredentialField(field, value);
 
     try {
-      await this.context.secrets.store(storageKey, value);
+      // Get existing credentials
+      const existingCredentials = await this.retrieveCredentials();
+      
+      if (!existingCredentials) {
+        throw new Error('No existing credentials found. Please save credentials first.');
+      }
+
+      // Update the specific field
+      existingCredentials[field] = value as any;
+
+      // Validate the complete credentials object
+      this.validateCredentials(existingCredentials);
+
+      // Store the updated credentials
+      await this.storeCredentials(existingCredentials);
+
       console.log(`Credential field '${field}' updated successfully`);
     } catch (error) {
       console.error(`Failed to update credential field '${field}':`, error);
@@ -250,23 +259,6 @@ export class CredentialService {
     }
   }
 
-  /**
-   * Get storage key for credential field
-   */
-  private getStorageKeyForField(field: keyof ElavonCredentials): string | null {
-    switch (field) {
-      case 'publicKey':
-        return CredentialService.STORAGE_KEYS.PUBLIC_KEY;
-      case 'secretKey':
-        return CredentialService.STORAGE_KEYS.SECRET_KEY;
-      case 'environment':
-        return CredentialService.STORAGE_KEYS.ENVIRONMENT;
-      case 'merchantId':
-        return CredentialService.STORAGE_KEYS.MERCHANT_ID;
-      default:
-        return null;
-    }
-  }
 
   /**
    * Get credential environment from keys

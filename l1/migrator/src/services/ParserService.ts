@@ -4,30 +4,38 @@ import * as path from 'path';
 import { glob } from 'glob';
 import { v4 as uuidv4 } from 'uuid';
 import { ConvergeEndpoint, ConvergeEndpointType } from '../types/ConvergeEndpoint';
-import { PatternMatchingService } from './PatternMatchingService';
+import { DynamicPatternMatchingService } from './DynamicPatternMatchingService';
+import { PatternConfigManager } from '../config/PatternConfig';
 import { WorkspaceScannerService, ScanResult, ScanProgress } from './WorkspaceScannerService';
 
 /**
  * Service for parsing code and detecting Converge endpoints
  */
 export class ParserService {
-  private readonly supportedExtensions = ['.js', '.ts', '.php', '.py', '.java', '.cs', '.rb', '.jsx', '.tsx'];
-  private readonly patternMatcher = new PatternMatchingService();
+  private readonly configManager: PatternConfigManager;
+  private patternMatcher: DynamicPatternMatchingService;
   private workspaceScanner?: WorkspaceScannerService;
   
-  // Legacy patterns for backward compatibility
-  private readonly convergePatterns = {
-    endpoints: [
-      /\/hosted-payments\/transaction_token/gi,
-      /\/Checkout\.js/gi,
-      /\/ProcessTransactionOnline/gi,
-      /\/batch-processing/gi,
-      /\/NonElavonCertifiedDevice/gi
-    ],
-    sslFields: /ssl_[a-zA-Z_][a-zA-Z0-9_]*/g,
-    urls: /https?:\/\/[^\s]*converge[^\s]*/gi,
-    apiCalls: /(fetch|axios|curl|http|request)\s*\([^)]*converge[^)]*\)/gi
-  };
+  constructor(configManager?: PatternConfigManager) {
+    this.configManager = configManager || new PatternConfigManager();
+    this.patternMatcher = new DynamicPatternMatchingService(this.configManager);
+  }
+  
+  /**
+   * Get supported extensions from configuration
+   */
+  private get supportedExtensions(): string[] {
+    return this.configManager.getSupportedExtensions();
+  }
+  
+  /**
+   * Load configuration from file
+   */
+  public async loadConfigFromFile(filePath: string): Promise<void> {
+    await this.configManager.loadFromFile(filePath);
+    // Recreate pattern matcher with new config
+    this.patternMatcher = new DynamicPatternMatchingService(this.configManager);
+  }
 
   /**
    * Scan the entire workspace for Converge endpoints with enhanced functionality
@@ -152,29 +160,31 @@ export class ParserService {
   private async parseJavaScriptFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
     const endpoints: ConvergeEndpoint[] = [];
     
-    // Use enhanced pattern matching
-    const analysis = this.patternMatcher.analyzeCode(content);
+    // Use dynamic pattern matching
+    const detectedEndpoints = this.patternMatcher.detectEndpoints(content);
+    const detectedSslFields = this.patternMatcher.detectSslFields(content);
+    const detectedUrls = this.patternMatcher.detectApiUrls(content);
+    const detectedCalls = this.patternMatcher.detectApiCalls(content);
     
     // Process detected endpoints
-    for (const endpointMatch of analysis.endpoints) {
-      for (const match of endpointMatch.matches) {
-        const lineNumber = this.getLineNumber(content, match.index || 0);
-        const codeBlock = this.extractCodeBlockAroundIndex(content, match.index || 0);
-        
-        const endpoint = await this.createEndpointWithAnalysis(
-          filePath,
-          lineNumber,
-          endpointMatch.type,
-          codeBlock,
-          analysis,
-          endpointMatch.confidence
-        );
-        endpoints.push(endpoint);
-      }
+    for (const detection of detectedEndpoints) {
+      const endpoint = await this.createEndpoint(
+        filePath,
+        detection.lineNumber,
+        detection.type,
+        this.extractCodeBlockAroundLine(content, detection.lineNumber),
+        content
+      );
+      endpoints.push(endpoint);
     }
 
     // Process SSL fields that might indicate Converge usage
-    const sslFieldsByLine = this.groupSSLFieldsByLine(analysis.sslFields);
+    const sslFieldsByLine = this.groupSSLFieldsByLine(detectedSslFields.map(field => ({
+      field: field.field,
+      line: field.lineNumber,
+      context: '',
+      confidence: 0.8
+    })));
     for (const [lineNumber, fields] of sslFieldsByLine.entries()) {
       // Check if this line has strong Converge indicators
       const lineContent = this.getLineContent(content, lineNumber);
@@ -182,13 +192,12 @@ export class ParserService {
       
       if (hasConvergeContext && fields.length > 0) {
         const codeBlock = this.extractCodeBlockAroundLine(content, lineNumber);
-        const endpoint = await this.createEndpointWithAnalysis(
+        const endpoint = await this.createEndpoint(
           filePath,
           lineNumber,
           this.inferEndpointTypeFromSSLFields(fields.map(f => f.field)),
           codeBlock,
-          analysis,
-          Math.max(...fields.map(f => f.confidence))
+          content
         );
         endpoints.push(endpoint);
       }
@@ -202,43 +211,33 @@ export class ParserService {
    */
   private async parsePHPFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
     const endpoints: ConvergeEndpoint[] = [];
-    const lines = content.split('\n');
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const lineNumber = i + 1;
-
-      // Look for PHP-specific Converge patterns
-      if (line.includes('curl_setopt') || line.includes('$ssl_')) {
-        const sslFields = this.extractSSLFields(line);
-        if (sslFields.length > 0) {
-          const endpoint = await this.createEndpoint(
-            filePath,
-            lineNumber,
-            ConvergeEndpointType.PROCESS_TRANSACTION,
-            this.extractCodeBlock(lines, i),
-            content
-          );
-          endpoints.push(endpoint);
-        }
-      }
-
-      // Check for Converge URL patterns
-      for (const pattern of this.convergePatterns.endpoints) {
-        if (pattern.test(line)) {
-          const endpointType = this.determineEndpointType(line);
-          if (endpointType) {
-            const endpoint = await this.createEndpoint(
-              filePath,
-              lineNumber,
-              endpointType,
-              this.extractCodeBlock(lines, i),
-              content
-            );
-            endpoints.push(endpoint);
-          }
-        }
-      }
+    
+    // Use dynamic pattern matching
+    const detectedEndpoints = this.patternMatcher.detectEndpoints(content);
+    const detectedSslFields = this.patternMatcher.detectSslFields(content);
+    
+    // Process detected endpoints
+    for (const detection of detectedEndpoints) {
+      const endpoint = await this.createEndpoint(
+        filePath,
+        detection.lineNumber,
+        detection.type,
+        this.extractCodeBlockAroundLine(content, detection.lineNumber),
+        content
+      );
+      endpoints.push(endpoint);
+    }
+    
+    // Process SSL fields
+    for (const sslField of detectedSslFields) {
+      const endpoint = await this.createEndpoint(
+        filePath,
+        sslField.lineNumber,
+        ConvergeEndpointType.PROCESS_TRANSACTION,
+        this.extractCodeBlockAroundLine(content, sslField.lineNumber),
+        content
+      );
+      endpoints.push(endpoint);
     }
 
     return this.deduplicateEndpoints(endpoints);
@@ -248,151 +247,103 @@ export class ParserService {
    * Parse Python files for Converge patterns
    */
   private async parsePythonFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
-    const endpoints: ConvergeEndpoint[] = [];
-    const lines = content.split('\n');
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const lineNumber = i + 1;
-
-      // Look for Python requests or urllib patterns
-      if (line.includes('requests.') || line.includes('urllib') || line.includes('ssl_')) {
-        const sslFields = this.extractSSLFields(line);
-        if (sslFields.length > 0 || this.containsConvergePattern(line)) {
-          const endpoint = await this.createEndpoint(
-            filePath,
-            lineNumber,
-            ConvergeEndpointType.PROCESS_TRANSACTION,
-            this.extractCodeBlock(lines, i),
-            content
-          );
-          endpoints.push(endpoint);
-        }
-      }
-    }
-
-    return this.deduplicateEndpoints(endpoints);
+    return this.parseGenericFile(filePath, content);
   }
 
   /**
    * Parse Java files for Converge patterns
    */
   private async parseJavaFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
-    const endpoints: ConvergeEndpoint[] = [];
-    const lines = content.split('\n');
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const lineNumber = i + 1;
-
-      // Look for Java HTTP client patterns
-      if (line.includes('HttpClient') || line.includes('HttpPost') || line.includes('ssl_')) {
-        if (this.containsConvergePattern(line) || this.extractSSLFields(line).length > 0) {
-          const endpoint = await this.createEndpoint(
-            filePath,
-            lineNumber,
-            ConvergeEndpointType.PROCESS_TRANSACTION,
-            this.extractCodeBlock(lines, i),
-            content
-          );
-          endpoints.push(endpoint);
-        }
-      }
-    }
-
-    return this.deduplicateEndpoints(endpoints);
+    return this.parseGenericFile(filePath, content);
   }
 
   /**
    * Parse C# files for Converge patterns
    */
   private async parseCSharpFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
-    const endpoints: ConvergeEndpoint[] = [];
-    const lines = content.split('\n');
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const lineNumber = i + 1;
-
-      // Look for C# HTTP client patterns
-      if (line.includes('HttpClient') || line.includes('WebRequest') || line.includes('ssl_')) {
-        if (this.containsConvergePattern(line) || this.extractSSLFields(line).length > 0) {
-          const endpoint = await this.createEndpoint(
-            filePath,
-            lineNumber,
-            ConvergeEndpointType.PROCESS_TRANSACTION,
-            this.extractCodeBlock(lines, i),
-            content
-          );
-          endpoints.push(endpoint);
-        }
-      }
-    }
-
-    return this.deduplicateEndpoints(endpoints);
+    return this.parseGenericFile(filePath, content);
   }
 
   /**
    * Parse Ruby files for Converge patterns with enhanced detection
    */
   private async parseRubyFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
-    return this.parseLanguageFileWithPatterns(filePath, content, 'ruby');
+    return this.parseGenericFile(filePath, content);
+  }
+
+
+  /**
+   * Parse generic files using dynamic pattern matching
+   */
+  private async parseGenericFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
+    const endpoints: ConvergeEndpoint[] = [];
+    
+    try {
+      // Use dynamic pattern matcher to detect endpoints
+      const detectedEndpoints = this.patternMatcher?.detectEndpoints(content) || [];
+      const detectedSslFields = this.patternMatcher?.detectSslFields(content) || [];
+      
+      console.log(`🔍 Parsing ${filePath}: Found ${detectedEndpoints.length} endpoints, ${detectedSslFields.length} SSL fields`);
+      
+      // Process detected endpoints
+      for (const detection of detectedEndpoints) {
+        const endpoint = await this.createEndpoint(
+          filePath,
+          detection.lineNumber,
+          detection.type,
+          this.extractCodeBlock(content.split('\n'), detection.lineNumber - 1),
+          content
+        );
+        endpoints.push(endpoint);
+      }
+      
+      // Process SSL fields if no endpoints were found
+      if (endpoints.length === 0 && detectedSslFields.length > 0) {
+        const sslField = detectedSslFields[0]; // Use first SSL field as reference
+        const endpoint = await this.createEndpoint(
+          filePath,
+          sslField.lineNumber,
+          ConvergeEndpointType.PROCESS_TRANSACTION,
+          this.extractCodeBlock(content.split('\n'), sslField.lineNumber - 1),
+          content
+        );
+        endpoints.push(endpoint);
+      }
+    } catch (error) {
+      console.error(`Error in parseGenericFile for ${filePath}:`, error);
+      // Fallback to basic pattern matching
+      endpoints.push(...await this.fallbackPatternMatching(filePath, content));
+    }
+
+    return this.deduplicateEndpoints(endpoints);
   }
 
   /**
-   * Generic language parser using enhanced pattern matching
+   * Fallback pattern matching when dynamic pattern matcher fails
    */
-  private async parseLanguageFileWithPatterns(
-    filePath: string, 
-    content: string, 
-    language: string
-  ): Promise<ConvergeEndpoint[]> {
+  private async fallbackPatternMatching(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
     const endpoints: ConvergeEndpoint[] = [];
-    const lines = content.split('\n');
-
-    // Use enhanced pattern matching for endpoint detection
-    const detectedEndpoints = this.patternMatcher.matchEndpoints(content);
     
-    for (const detection of detectedEndpoints) {
-      for (const match of detection.matches) {
-        const lineNumber = this.getLineNumber(content, match.index || 0);
-        const endpoint = await this.createEndpoint(
-          filePath,
-          lineNumber,
-          detection.type,
-          this.extractCodeBlock(lines, lineNumber - 1),
-          content
-        );
-        (endpoint as any).confidence = detection.confidence;
-        endpoints.push(endpoint);
-      }
-    }
-
-    // Enhanced SSL field detection
-    const sslFields = this.patternMatcher.extractSSLFields(content);
-    const processedLines = new Set<number>();
-
-    for (const sslField of sslFields) {
-      if (!processedLines.has(sslField.line)) {
-        const endpoint = await this.createEndpoint(
-          filePath,
-          sslField.line,
-          ConvergeEndpointType.PROCESS_TRANSACTION,
-          this.extractCodeBlock(lines, sslField.line - 1),
-          content
-        );
-        (endpoint as any).confidence = sslField.confidence;
-        endpoints.push(endpoint);
-        processedLines.add(sslField.line);
-      }
-    }
-
-    // Detect HTTP client usage patterns
-    const httpClientUsage = this.patternMatcher.detectHTTPMethods(content);
-    for (const usage of httpClientUsage) {
-      for (const match of usage.matches) {
-        const lineNumber = this.getLineNumber(content, match.index || 0);
-        if (!processedLines.has(lineNumber)) {
+    try {
+      // Basic SSL field patterns
+      const sslFieldPattern = /ssl_[a-zA-Z_][a-zA-Z0-9_]*/g;
+      const convergeUrlPattern = /convergepay\.com|api\.demo\.convergepay\.com|VirtualMerchantDemo|processxml\.do/g;
+      const processTransactionPattern = /processxml|ssl_transaction_type|ssl_merchant_ID|ssl_user_id|ssl_pin/g;
+      
+      const lines = content.split('\n');
+      let hasConvergePatterns = false;
+      let lineNumber = 1;
+      
+      for (const line of lines) {
+        // Check for SSL fields
+        const sslMatches = line.match(sslFieldPattern);
+        const urlMatches = line.match(convergeUrlPattern);
+        const endpointMatches = line.match(processTransactionPattern);
+        
+        if (sslMatches || urlMatches || endpointMatches) {
+          hasConvergePatterns = true;
+          
+          // Create endpoint if we find converge patterns
           const endpoint = await this.createEndpoint(
             filePath,
             lineNumber,
@@ -400,40 +351,20 @@ export class ParserService {
             this.extractCodeBlock(lines, lineNumber - 1),
             content
           );
-          (endpoint as any).confidence = usage.confidence;
           endpoints.push(endpoint);
-          processedLines.add(lineNumber);
+          break; // Only create one endpoint per file for fallback
         }
+        
+        lineNumber++;
       }
+      
+      console.log(`🔧 Fallback pattern matching for ${filePath}: Found ${endpoints.length} endpoints`);
+      
+    } catch (error) {
+      console.error(`Error in fallback pattern matching for ${filePath}:`, error);
     }
-
-    return this.deduplicateEndpoints(endpoints);
-  }
-
-  /**
-   * Parse generic files using text-based analysis
-   */
-  private async parseGenericFile(filePath: string, content: string): Promise<ConvergeEndpoint[]> {
-    const endpoints: ConvergeEndpoint[] = [];
-    const lines = content.split('\n');
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const lineNumber = i + 1;
-
-      if (this.containsConvergePattern(line) || this.extractSSLFields(line).length > 0) {
-        const endpoint = await this.createEndpoint(
-          filePath,
-          lineNumber,
-          ConvergeEndpointType.PROCESS_TRANSACTION,
-          this.extractCodeBlock(lines, i),
-          content
-        );
-        endpoints.push(endpoint);
-      }
-    }
-
-    return this.deduplicateEndpoints(endpoints);
+    
+    return endpoints;
   }
 
   /**
@@ -495,8 +426,11 @@ export class ParserService {
    * Check if a line contains Converge-specific patterns
    */
   private containsConvergePattern(line: string): boolean {
-    return this.convergePatterns.endpoints.some(pattern => pattern.test(line)) ||
-           this.convergePatterns.urls.test(line) ||
+    const detectedEndpoints = this.patternMatcher.detectEndpoints(line);
+    const detectedUrls = this.patternMatcher.detectApiUrls(line);
+    
+    return detectedEndpoints.length > 0 || 
+           detectedUrls.some(url => url.type === 'converge') ||
            line.toLowerCase().includes('converge');
   }
 
@@ -504,8 +438,8 @@ export class ParserService {
    * Extract SSL fields from a line of code
    */
   private extractSSLFields(line: string): string[] {
-    const matches = line.matchAll(this.convergePatterns.sslFields);
-    return Array.from(matches, match => match[0]);
+    const detectedSslFields = this.patternMatcher.detectSslFields(line);
+    return detectedSslFields.map(field => field.field);
   }
 
   /**
@@ -513,6 +447,16 @@ export class ParserService {
    */
   private determineEndpointType(content: string): ConvergeEndpointType | null {
     const lowerContent = content.toLowerCase();
+    
+    // Skip if this looks like a method declaration or class definition
+    if (this.isMethodOrClassDefinition(content)) {
+      return null;
+    }
+    
+    // Skip if this is just a method name without actual API usage
+    if (this.isJustMethodName(content)) {
+      return null;
+    }
     
     if (lowerContent.includes('hosted-payments') || lowerContent.includes('transaction_token')) {
       return ConvergeEndpointType.HOSTED_PAYMENTS;
@@ -531,6 +475,54 @@ export class ParserService {
     }
     
     return null;
+  }
+
+  /**
+   * Check if content is a method or class definition
+   */
+  private isMethodOrClassDefinition(content: string): boolean {
+    const trimmed = content.trim();
+    
+    // Java method declarations
+    if (trimmed.match(/^\s*(public|private|protected|static).*ProcessTransactionOnline\s*\(/)) {
+      return true;
+    }
+    
+    // Class definitions
+    if (trimmed.match(/^\s*(public|private|protected)?\s*class\s+.*ProcessTransactionOnline/)) {
+      return true;
+    }
+    
+    // Interface definitions
+    if (trimmed.match(/^\s*(public|private|protected)?\s*interface\s+.*ProcessTransactionOnline/)) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Check if content is just a method name without actual API usage
+   */
+  private isJustMethodName(content: string): boolean {
+    const trimmed = content.trim();
+    
+    // If it's just "ProcessTransactionOnline" without actual API call
+    if (trimmed.match(/^\s*ProcessTransactionOnline\s*$/)) {
+      return true;
+    }
+    
+    // If it's a method name in a comment or documentation
+    if (trimmed.match(/^\s*\/\/.*ProcessTransactionOnline/) || trimmed.match(/^\s*\*.*ProcessTransactionOnline/)) {
+      return true;
+    }
+    
+    // If it's just a method name without parentheses or API context
+    if (trimmed.match(/^\s*ProcessTransactionOnline\s*$/) && !trimmed.includes('(') && !trimmed.includes('http') && !trimmed.includes('api')) {
+      return true;
+    }
+    
+    return false;
   }
 
   /**
@@ -722,11 +714,7 @@ export class ParserService {
 
     for (let i = startLine; i <= endLine; i++) {
       const contextLine = lines[i];
-      if (contextLine && (
-        contextLine.toLowerCase().includes('converge') ||
-        this.convergePatterns.endpoints.some(pattern => pattern.test(contextLine)) ||
-        this.convergePatterns.urls.test(contextLine)
-      )) {
+      if (contextLine && this.containsConvergePattern(contextLine)) {
         return true;
       }
     }
@@ -759,39 +747,6 @@ export class ParserService {
     return ConvergeEndpointType.PROCESS_TRANSACTION;
   }
 
-  /**
-   * Create endpoint with enhanced analysis data
-   */
-  private async createEndpointWithAnalysis(
-    filePath: string,
-    lineNumber: number,
-    endpointType: ConvergeEndpointType,
-    code: string,
-    analysis: any,
-    confidence: number
-  ): Promise<ConvergeEndpoint> {
-    // Extract SSL fields from the analysis
-    const sslFields = analysis.sslFields
-      .filter((field: any) => Math.abs(field.line - lineNumber) <= 5) // Fields within 5 lines
-      .map((field: any) => field.field as string);
-
-    const endpoint: ConvergeEndpoint = {
-      id: uuidv4(),
-      filePath: filePath,
-      lineNumber: lineNumber,
-      endpointType: endpointType,
-      code: code,
-      sslFields: [...new Set(sslFields as string[])] // Remove duplicates
-    };
-
-    // Add metadata if available
-    (endpoint as any).confidence = confidence;
-    (endpoint as any).httpMethods = analysis.httpMethods.map((method: any) => method.method);
-    (endpoint as any).hasConfiguration = analysis.configuration.hasConfiguration;
-    (endpoint as any).migrationContext = analysis.migrationContext.hasMigrationContext;
-
-    return endpoint;
-  }
 
   /**
    * Scan specific files
@@ -850,12 +805,27 @@ export class ParserService {
     patternStats: any;
     totalPatterns: number;
   } {
-    const patternStats = this.patternMatcher.getPatternStatistics();
+    const config = this.configManager.getConfig();
+    const convergePatterns = config.converge;
+    const elavonPatterns = config.elavon;
+    
+    const totalPatterns = 
+      convergePatterns.endpoints.hostedPayments.length +
+      convergePatterns.endpoints.checkout.length +
+      convergePatterns.endpoints.processTransaction.length +
+      convergePatterns.endpoints.batchProcessing.length +
+      convergePatterns.endpoints.deviceManagement.length +
+      convergePatterns.sslFields.variations.length +
+      convergePatterns.urls.length +
+      convergePatterns.apiCalls.length;
     
     return {
       supportedLanguages: this.supportedExtensions,
-      patternStats,
-      totalPatterns: patternStats.totalPatterns
+      patternStats: {
+        convergePatterns: convergePatterns,
+        elavonPatterns: elavonPatterns
+      },
+      totalPatterns
     };
   }
 }

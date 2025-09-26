@@ -34,7 +34,7 @@ interface DocumentationPanelState {
  * Webview provider for the documentation panel
  */
 export class DocumentationPanelProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'convergeElavonMigrator.documentationPanel';
+  public static readonly viewType = 'elavonx.documentationPanel';
 
   private _view?: vscode.WebviewView;
   private _mappingService: MappingDictionaryService;

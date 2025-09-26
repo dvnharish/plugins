@@ -1,9 +1,18 @@
 {
-  "name": "converge-elavon-migrator",
-  "displayName": "Converge to Elavon Migrator",
+  "name": "elavonx",
+  "displayName": "ElavonX - API Migrator",
   "description": "🚀 AI-powered VS Code extension for seamless migration from Converge to Elavon payment APIs. Features intelligent code analysis, automated migration, multi-language support, and real-time validation.",
-  "version": "1.0.0",
-  "publisher": "converge-elavon",
+  "version": "2.0.16",
+  "publisher": "elavonx",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elavonx/migrator.git"
+  },
+  "homepage": "https://github.com/elavonx/migrator#readme",
+  "bugs": {
+    "url": "https://github.com/elavonx/migrator/issues"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -21,342 +30,441 @@
     "copilot"
   ],
   "activationEvents": [
-    "onLanguage:javascript",
-    "onLanguage:typescript",
-    "onLanguage:php",
-    "onLanguage:python",
-    "onLanguage:java",
-    "onLanguage:csharp"
+    "*",
+    "onCommand:elavonx.scanProject",
+    "onCommand:elavonx.test"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "converge-elavon.scanProject",
+        "command": "elavonx.scanProject",
         "title": "Scan Project for Converge Endpoints",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.migrateEndpoint",
+        "command": "elavonx.migrateEndpoint",
         "title": "Migrate to Elavon",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.bulkMigrate",
+        "command": "elavonx.bulkMigrate",
         "title": "Migrate All Endpoints",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.validateMigration",
+        "command": "elavonx.validateMigration",
         "title": "Validate Against Elavon Sandbox",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.openCredentials",
+        "command": "elavonx.openCredentials",
         "title": "Configure Elavon Credentials",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.showDocumentation",
+        "command": "elavonx.showDocumentation",
         "title": "Show Documentation",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.refreshEndpoints",
+        "command": "elavonx.refreshEndpoints",
         "title": "Refresh Endpoints",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.clearCredentials",
+        "command": "elavonx.clearCredentials",
         "title": "Clear Credentials",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.showMappingDictionary",
+        "command": "elavonx.showMappingDictionary",
         "title": "Show Mapping Dictionary",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.reloadMappings",
+        "command": "elavonx.reloadMappings",
         "title": "Reload Mappings",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.showMigrationHistory",
+        "command": "elavonx.showMigrationHistory",
         "title": "Show Migration History",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.rollbackMigration",
+        "command": "elavonx.rollbackMigration",
         "title": "Rollback Migration",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.clearMigrationHistory",
+        "command": "elavonx.clearMigrationHistory",
         "title": "Clear Migration History",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.exportMigrationHistory",
+        "command": "elavonx.exportMigrationHistory",
         "title": "Export Migration History",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.importMigrationHistory",
+        "command": "elavonx.importMigrationHistory",
         "title": "Import Migration History",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.showErrorLog",
+        "command": "elavonx.showErrorLog",
         "title": "Show Error Log",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.showPerformanceMetrics",
+        "command": "elavonx.showPerformanceMetrics",
         "title": "Show Performance Metrics",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.clearErrorLog",
+        "command": "elavonx.clearErrorLog",
         "title": "Clear Error Log",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.exportErrorLog",
+        "command": "elavonx.exportErrorLog",
         "title": "Export Error Log",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.showConfiguration",
+        "command": "elavonx.showConfiguration",
         "title": "Show Configuration",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.resetConfiguration",
+        "command": "elavonx.resetConfiguration",
         "title": "Reset Configuration",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.exportConfiguration",
+        "command": "elavonx.exportConfiguration",
         "title": "Export Configuration",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
       },
       {
-        "command": "converge-elavon.importConfiguration",
+        "command": "elavonx.importConfiguration",
         "title": "Import Configuration",
-        "category": "Converge-Elavon"
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.generateReport",
+        "title": "Generate Migration Report",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.exportReport",
+        "title": "Export Report",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.test",
+        "title": "Test Extension",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.testScanPanel",
+        "title": "Test Scan Panel",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.testCredentialsPanel",
+        "title": "Test Credentials Panel",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.testDocumentationPanel",
+        "title": "Test Documentation Panel",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.testMigrationPanel",
+        "title": "Test Migration Panel",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.testReportPanel",
+        "title": "Test Report Panel",
+        "category": "ElavonX"
+      },
+      {
+        "command": "elavonx.testAllPanels",
+        "title": "Test All Panels",
+        "category": "ElavonX"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "converge-elavon.migrateEndpoint",
+          "command": "elavonx.migrateEndpoint",
           "when": "editorHasSelection && resourceExtname =~ /\\.(js|ts|php|py|java|cs)$/",
           "group": "converge-elavon@1"
         }
       ],
       "commandPalette": [
         {
-          "command": "converge-elavon.scanProject"
+          "command": "elavonx.scanProject"
         },
         {
-          "command": "converge-elavon.bulkMigrate",
-          "when": "converge-elavon.hasEndpoints"
+          "command": "elavonx.bulkMigrate",
+          "when": "elavonx.hasEndpoints"
         },
         {
-          "command": "converge-elavon.openCredentials"
+          "command": "elavonx.openCredentials"
         },
         {
-          "command": "converge-elavon.showDocumentation"
+          "command": "elavonx.showDocumentation"
         },
         {
-          "command": "converge-elavon.refreshEndpoints"
+          "command": "elavonx.refreshEndpoints"
         },
         {
-          "command": "converge-elavon.clearCredentials"
+          "command": "elavonx.clearCredentials"
         },
         {
-          "command": "converge-elavon.validateMigration"
+          "command": "elavonx.validateMigration"
         },
         {
-          "command": "converge-elavon.showMappingDictionary"
+          "command": "elavonx.showMappingDictionary"
         },
         {
-          "command": "converge-elavon.reloadMappings"
+          "command": "elavonx.reloadMappings"
         }
       ],
       "explorer/context": [
         {
-          "command": "converge-elavon.scanProject",
+          "command": "elavonx.scanProject",
           "when": "explorerResourceIsFolder",
           "group": "converge-elavon@1"
         }
       ]
     },
     "views": {
+      "elavonx": [
+        {
+          "id": "elavonx.scanView",
+          "name": "Converge Endpoints",
+          "when": "elavonx.hasEndpoints"
+        },
+        {
+          "id": "elavonx.credentialsView",
+          "name": "Credentials",
+          "when": "elavonx.hasCredentials"
+        },
+        {
+          "id": "elavonx.migrationView",
+          "name": "Migration",
+          "when": "elavonx.hasMigrations"
+        },
+        {
+          "id": "elavonx.reportView",
+          "name": "Reports",
+          "when": "elavonx.hasReports"
+        }
+      ],
       "explorer": [
         {
-          "id": "converge-elavon.scanView",
+          "id": "elavonx.scanView",
           "name": "Converge Endpoints",
-          "when": "converge-elavon.hasEndpoints"
+          "when": "elavonx.hasEndpoints"
         }
       ]
     },
     "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "elavonx",
+          "title": "ElavonX Migrator",
+          "icon": "icon.png"
+        }
+      ],
       "panel": [
         {
           "id": "converge-elavon",
-          "title": "Converge-Elavon Migrator",
-          "icon": "$(arrow-swap)"
+          "title": "ElavonX Migrator",
+          "icon": "icon.png"
         }
       ]
     },
     "webviews": [
       {
-        "viewType": "converge-elavon.scanPanel",
+        "viewType": "elavonx.scanPanel",
         "displayName": "Project Scan"
       },
       {
-        "viewType": "converge-elavon.credentialsPanel",
+        "viewType": "elavonx.credentialsPanel",
         "displayName": "Credentials"
       },
       {
-        "viewType": "converge-elavon.documentationPanel",
+        "viewType": "elavonx.documentationPanel",
         "displayName": "Documentation"
       },
       {
-        "viewType": "converge-elavon.migrationPanel",
+        "viewType": "elavonx.migrationPanel",
         "displayName": "Migration"
+      },
+      {
+        "viewType": "elavonx.reportPanel",
+        "displayName": "Reports"
       }
     ],
     "configuration": {
-      "title": "Converge-Elavon Migrator",
+      "title": "ElavonX Migrator",
       "properties": {
-        "converge-elavon.scanOnStartup": {
+        "elavonx.scanOnStartup": {
           "type": "boolean",
           "default": false,
           "description": "Automatically scan for Converge endpoints when opening a workspace"
         },
-        "converge-elavon.autoValidate": {
+        "elavonx.autoValidate": {
           "type": "boolean",
           "default": true,
           "description": "Automatically validate migrations against Elavon sandbox"
         },
-        "converge-elavon.copilotTimeout": {
+        "elavonx.copilotTimeout": {
           "type": "number",
           "default": 30000,
           "description": "Timeout for Copilot API calls in milliseconds"
         },
-        "converge-elavon.maxRetries": {
+        "elavonx.maxRetries": {
           "type": "number",
           "default": 3,
           "description": "Maximum number of retries for failed operations"
         },
-        "converge-elavon.backupEnabled": {
+        "elavonx.backupEnabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable automatic backup creation before migrations"
         },
-        "converge-elavon.maxBackupsPerFile": {
+        "elavonx.maxBackupsPerFile": {
           "type": "number",
           "default": 5,
           "description": "Maximum number of backups to keep per file"
         },
-        "converge-elavon.logLevel": {
+        "elavonx.logLevel": {
           "type": "string",
-          "enum": ["debug", "info", "warn", "error", "critical"],
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error",
+            "critical"
+          ],
           "default": "info",
           "description": "Logging level for the extension"
         },
-        "converge-elavon.enablePerformanceMonitoring": {
+        "elavonx.enablePerformanceMonitoring": {
           "type": "boolean",
           "default": true,
           "description": "Enable performance monitoring and metrics collection"
         },
-        "converge-elavon.maxLogEntries": {
+        "elavonx.maxLogEntries": {
           "type": "number",
           "default": 5000,
           "description": "Maximum number of log entries to keep in memory"
         },
-        "converge-elavon.maxErrorEntries": {
+        "elavonx.maxErrorEntries": {
           "type": "number",
           "default": 1000,
           "description": "Maximum number of error entries to keep in memory"
         },
-        "converge-elavon.autoCleanupLogs": {
+        "elavonx.autoCleanupLogs": {
           "type": "boolean",
           "default": true,
           "description": "Automatically clean up old logs to prevent memory issues"
         },
-        "converge-elavon.cleanupInterval": {
+        "elavonx.cleanupInterval": {
           "type": "number",
           "default": 24,
           "description": "Hours between automatic log cleanup (0 to disable)"
         },
-        "converge-elavon.showMigrationPreview": {
+        "elavonx.showMigrationPreview": {
           "type": "boolean",
           "default": true,
           "description": "Show migration preview before applying changes"
         },
-        "converge-elavon.confirmBulkMigration": {
+        "elavonx.confirmBulkMigration": {
           "type": "boolean",
           "default": true,
           "description": "Require confirmation before starting bulk migrations"
         },
-        "converge-elavon.stopOnError": {
+        "elavonx.stopOnError": {
           "type": "boolean",
           "default": false,
           "description": "Stop bulk migration if any endpoint fails"
         },
-        "converge-elavon.includeComments": {
+        "elavonx.includeComments": {
           "type": "boolean",
           "default": true,
           "description": "Include migration comments in generated code"
         },
-        "converge-elavon.preserveFormatting": {
+        "elavonx.preserveFormatting": {
           "type": "boolean",
           "default": true,
           "description": "Preserve original code formatting when possible"
         },
-        "converge-elavon.customMappingFile": {
+        "elavonx.customMappingFile": {
           "type": "string",
           "default": "",
           "description": "Path to custom mapping dictionary file (relative to workspace root)"
         },
-        "converge-elavon.ignorePatterns": {
+        "elavonx.ignorePatterns": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "default": ["node_modules/**", ".git/**", "dist/**", "build/**"],
+          "default": [
+            "node_modules/**",
+            ".git/**",
+            "dist/**",
+            "build/**"
+          ],
           "description": "File patterns to ignore during scanning"
         },
-        "converge-elavon.scanFileTypes": {
+        "elavonx.scanFileTypes": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "default": ["js", "ts", "jsx", "tsx", "php", "py", "java", "cs", "rb", "go", "cpp", "c"],
+          "default": [
+            "js",
+            "ts",
+            "jsx",
+            "tsx",
+            "php",
+            "py",
+            "java",
+            "cs",
+            "rb",
+            "go",
+            "cpp",
+            "c"
+          ],
           "description": "File extensions to include in scanning"
         },
-        "converge-elavon.maxFileSize": {
+        "elavonx.maxFileSize": {
           "type": "number",
           "default": 1048576,
           "description": "Maximum file size to scan in bytes (1MB default)"
         },
-        "converge-elavon.confidenceThreshold": {
+        "elavonx.confidenceThreshold": {
           "type": "number",
           "default": 0.7,
           "minimum": 0,
           "maximum": 1,
           "description": "Minimum confidence score for automatic migration suggestions"
         },
-        "converge-elavon.enableTelemetry": {
+        "elavonx.enableTelemetry": {
           "type": "boolean",
           "default": false,
           "description": "Enable anonymous usage telemetry to help improve the extension"
         },
-        "converge-elavon.telemetryEndpoint": {
+        "elavonx.telemetryEndpoint": {
           "type": "string",
           "default": "https://api.converge-elavon-migrator.com/telemetry",
           "description": "Telemetry endpoint URL (only used if telemetry is enabled)"
@@ -375,6 +483,11 @@
     "lint": "eslint src --ext ts",
     "test": "jest",
     "test:unit": "jest",
+    "build": "node scripts/build.js",
+    "build:patch": "node scripts/build.js patch",
+    "build:minor": "node scripts/build.js minor",
+    "build:major": "node scripts/build.js major",
+    "build:no-install": "node scripts/build.js patch --no-install",
     "test:coverage": "jest --coverage"
   },
   "devDependencies": {

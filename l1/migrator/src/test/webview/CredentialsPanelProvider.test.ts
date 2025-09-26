@@ -137,7 +137,7 @@ describe('CredentialsPanelProvider', () => {
       it('should save valid credentials', async () => {
         const credentialsData = {
           publicKey: 'pk_test_1234567890abcdef1234567890',
-          secretKey: 'sk_test_1234567890abcdef1234567890',
+          secretKey: 'sk_test_placeholder_key_for_testing',
           environment: 'sandbox' as const,
           merchantId: 'MERCHANT123'
         };
@@ -167,7 +167,7 @@ describe('CredentialsPanelProvider', () => {
       it('should test stored credentials when no data provided', async () => {
         const storedCredentials: ElavonCredentials = {
           publicKey: 'pk_test_1234567890abcdef1234567890',
-          secretKey: 'sk_test_1234567890abcdef1234567890',
+          secretKey: 'sk_test_placeholder_key_for_testing',
           environment: 'sandbox'
         };
 
@@ -222,7 +222,7 @@ describe('CredentialsPanelProvider', () => {
       it('should load existing credentials with masked secret key', async () => {
         const storedCredentials: ElavonCredentials = {
           publicKey: 'pk_test_1234567890abcdef1234567890',
-          secretKey: 'sk_test_1234567890abcdef1234567890',
+          secretKey: 'sk_test_placeholder_key_for_testing',
           environment: 'sandbox',
           merchantId: 'MERCHANT123'
         };
@@ -286,7 +286,7 @@ describe('CredentialsPanelProvider', () => {
       it('should return true when credentials exist', async () => {
         const mockCredentials: ElavonCredentials = {
           publicKey: 'pk_test_1234567890abcdef1234567890',
-          secretKey: 'sk_test_1234567890abcdef1234567890',
+          secretKey: 'sk_test_placeholder_key_for_testing',
           environment: 'sandbox'
         };
 
@@ -311,7 +311,7 @@ describe('CredentialsPanelProvider', () => {
       it('should validate stored credentials', async () => {
         const mockCredentials: ElavonCredentials = {
           publicKey: 'pk_test_1234567890abcdef1234567890',
-          secretKey: 'sk_test_1234567890abcdef1234567890',
+          secretKey: 'sk_test_placeholder_key_for_testing',
           environment: 'sandbox'
         };
 

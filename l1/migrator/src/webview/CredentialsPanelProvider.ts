@@ -26,7 +26,7 @@ interface CredentialsPanelState {
  * Webview provider for the credentials panel
  */
 export class CredentialsPanelProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'convergeElavonMigrator.credentialsPanel';
+  public static readonly viewType = 'elavonx.credentialsPanel';
 
   private _view?: vscode.WebviewView;
   private _credentialService: CredentialService;

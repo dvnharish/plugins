@@ -24,30 +24,78 @@ export class ExtensionManager implements vscode.Disposable {
    */
   public async initialize(): Promise<void> {
     try {
-      // Initialize services
-      this.serviceContainer.initialize();
+      console.log('🔧 Initializing ElavonX extension services...');
+      console.log('📁 Context extension path:', this.context.extensionPath);
+      
+      // Initialize services with error handling
+      try {
+        console.log('🔧 Initializing service container...');
+        this.serviceContainer.initialize();
+        console.log('✅ Service container initialized');
+      } catch (error) {
+        console.error('❌ Service container initialization failed:', error);
+        console.error('📊 Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        throw error; // Re-throw to see the full error
+      }
       
       // Register commands
-      this.commandRegistry.registerCommands();
-      this.disposables.push(this.commandRegistry);
+      try {
+        this.commandRegistry.registerCommands();
+        this.disposables.push(this.commandRegistry);
+        console.log('Commands registered successfully');
+      } catch (error) {
+        console.warn('Command registration failed:', error);
+      }
       
-      // Initialize panels
-      this.panelManager.initialize();
-      this.disposables.push(this.panelManager);
+      // Initialize panels with error handling
+      try {
+        this.panelManager.initialize();
+        this.disposables.push(this.panelManager);
+        console.log('Panels initialized successfully');
+      } catch (error) {
+        console.warn('Panel initialization failed:', error);
+      }
+      
+      // Connect command registry with panel manager
+      try {
+        this.commandRegistry.setPanelManager(this.panelManager);
+        console.log('Command registry connected to panel manager');
+      } catch (error) {
+        console.warn('Failed to connect command registry to panel manager:', error);
+      }
       
       // Register context for conditional UI elements
-      this.setContext();
+      try {
+        this.setContext();
+        console.log('Context variables set');
+      } catch (error) {
+        console.warn('Failed to set context variables:', error);
+      }
       
       // Set up configuration change listener
-      this.setupConfigurationListener();
+      try {
+        this.setupConfigurationListener();
+        console.log('Configuration listener set up');
+      } catch (error) {
+        console.warn('Failed to set up configuration listener:', error);
+      }
       
-      // Perform startup scan if enabled
-      await this.performStartupScan();
+      // Perform startup scan if enabled (non-blocking)
+      try {
+        await this.performStartupScan();
+        console.log('Startup scan completed');
+      } catch (error) {
+        console.warn('Startup scan failed:', error);
+      }
       
       console.log('Converge-Elavon Migrator extension initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize extension:', error);
-      throw error;
+      console.error('Critical error during extension initialization:', error);
+      // Don't throw the error, just log it and continue with basic functionality
+      console.log('Extension will continue with limited functionality');
     }
   }
 
@@ -55,7 +103,13 @@ export class ExtensionManager implements vscode.Disposable {
    * Set VS Code context variables for conditional UI
    */
   private setContext(): void {
-    vscode.commands.executeCommand('setContext', 'converge-elavon.hasEndpoints', false);
+    // Set all context variables to show all panels by default
+    vscode.commands.executeCommand('setContext', 'elavonx.hasEndpoints', true);
+    vscode.commands.executeCommand('setContext', 'elavonx.hasCredentials', true);
+    vscode.commands.executeCommand('setContext', 'elavonx.hasMigrations', true);
+    vscode.commands.executeCommand('setContext', 'elavonx.hasReports', true);
+    
+    console.log('Context variables set - all panels should be visible');
   }
 
   /**
@@ -76,7 +130,7 @@ export class ExtensionManager implements vscode.Disposable {
     if (ConfigurationService.getScanOnStartup() && vscode.workspace.workspaceFolders) {
       console.log('Performing startup scan...');
       try {
-        await vscode.commands.executeCommand('converge-elavon.scanProject');
+        await vscode.commands.executeCommand('elavonx.scanProject');
       } catch (error) {
         console.error('Error during startup scan:', error);
       }

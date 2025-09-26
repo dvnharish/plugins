@@ -22,7 +22,7 @@ describe('ElavonSandboxClient', () => {
 
   const mockCredentials: ElavonCredentials = {
     publicKey: 'pk_test_123456789',
-    secretKey: 'sk_test_987654321',
+    secretKey: 'sk_test_placeholder_key_for_testing',
     merchantId: 'merchant_123',
     environment: 'sandbox'
   };

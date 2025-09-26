@@ -66,7 +66,7 @@ interface MigrationPanelState {
  * Webview provider for the migration panel
  */
 export class MigrationPanelProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = 'convergeElavonMigrator.migrationPanel';
+  public static readonly viewType = 'elavonx.migrationPanel';
 
   private _view?: vscode.WebviewView;
   private _currentState: MigrationPanelState = {
@@ -504,11 +504,67 @@ export class MigrationPanelProvider implements vscode.WebviewViewProvider {
    * Restore backup of file
    */
   private async _restoreBackup(filePath: string): Promise<void> {
-    // Find the most recent backup
-    const backupPattern = `${filePath}.backup.*`;
-    // In a real implementation, you would search for backup files
-    // For now, we'll just show a message
-    throw new Error('Backup restoration not implemented in this demo');
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Find the most recent backup
+      const backupDir = path.dirname(filePath);
+      const fileName = path.basename(filePath);
+      const backupPattern = `${fileName}.backup.*`;
+      
+      // Look for backup files
+      const files = fs.readdirSync(backupDir);
+      const backupFiles = files
+        .filter(file => file.startsWith(`${fileName}.backup.`))
+        .sort()
+        .reverse(); // Most recent first
+      
+      if (backupFiles.length === 0) {
+        vscode.window.showWarningMessage('No backup files found for this file');
+        return;
+      }
+      
+      // Let user choose which backup to restore
+      const backupChoice = await vscode.window.showQuickPick(
+        backupFiles.map(file => ({
+          label: file,
+          description: `Backup: ${file}`,
+          detail: `Size: ${fs.statSync(path.join(backupDir, file)).size} bytes`
+        })),
+        {
+          placeHolder: 'Select backup to restore',
+          title: 'Restore from Backup'
+        }
+      );
+      
+      if (!backupChoice) {
+        return;
+      }
+      
+      const backupPath = path.join(backupDir, backupChoice.label);
+      const backupContent = fs.readFileSync(backupPath, 'utf8');
+      
+      // Restore the file
+      const document = await vscode.workspace.openTextDocument(filePath);
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(
+        document.uri,
+        new vscode.Range(0, 0, document.lineCount, 0),
+        backupContent
+      );
+      
+      const success = await vscode.workspace.applyEdit(edit);
+      if (success) {
+        vscode.window.showInformationMessage(`File restored from backup: ${backupChoice.label}`);
+      } else {
+        vscode.window.showErrorMessage('Failed to restore file from backup');
+      }
+      
+    } catch (error) {
+      console.error('Backup restoration failed:', error);
+      vscode.window.showErrorMessage(`Backup restoration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**

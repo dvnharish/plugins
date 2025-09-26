@@ -11,14 +11,14 @@ describe('ElavonValidationService', () => {
 
   const validSandboxCredentials: ElavonCredentials = {
     publicKey: 'pk_test_1234567890abcdef1234567890',
-    secretKey: 'sk_test_1234567890abcdef1234567890',
+    secretKey: 'sk_test_placeholder_key_for_testing',
     environment: 'sandbox',
     merchantId: 'TEST_MERCHANT'
   };
 
   const validProductionCredentials: ElavonCredentials = {
     publicKey: 'pk_test_fake_key_for_testing_only',
-    secretKey: 'sk_test_fake_key_for_testing_only',
+    secretKey: 'sk_test_placeholder_key_for_testing',
     environment: 'production',
     merchantId: 'LIVE_MERCHANT'
   };
@@ -115,7 +115,7 @@ describe('ElavonValidationService', () => {
     it('should handle invalid credential format', async () => {
       const invalidCredentials: ElavonCredentials = {
         publicKey: 'invalid_key',
-        secretKey: 'sk_test_1234567890abcdef1234567890',
+        secretKey: 'sk_test_placeholder_key_for_testing',
         environment: 'sandbox'
       };
 
@@ -262,7 +262,7 @@ describe('ElavonValidationService', () => {
     it('should handle format validation failure', async () => {
       const invalidCredentials: ElavonCredentials = {
         publicKey: 'invalid',
-        secretKey: 'sk_test_1234567890abcdef1234567890',
+        secretKey: 'sk_test_placeholder_key_for_testing',
         environment: 'sandbox'
       };
 
@@ -382,7 +382,7 @@ describe('ElavonValidationService', () => {
     it('should handle environment mismatch (test keys in production)', async () => {
       const mismatchedCredentials: ElavonCredentials = {
         publicKey: 'pk_test_1234567890abcdef1234567890',
-        secretKey: 'sk_test_1234567890abcdef1234567890',
+        secretKey: 'sk_test_placeholder_key_for_testing',
         environment: 'production'
       };
 
@@ -395,7 +395,7 @@ describe('ElavonValidationService', () => {
     it('should handle environment mismatch (live keys in sandbox)', async () => {
       const mismatchedCredentials: ElavonCredentials = {
         publicKey: 'pk_test_fake_key_for_testing_only',
-        secretKey: 'sk_test_fake_key_for_testing_only',
+        secretKey: 'sk_test_placeholder_key_for_testing',
         environment: 'sandbox'
       };
 

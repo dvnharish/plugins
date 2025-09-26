@@ -1,0 +1,46 @@
+# Source files
+src/**
+tsconfig.json
+webpack.config.js
+jest.config.js
+
+# Development files
+.vscode/**
+.vscode-test/**
+*.vsix
+*.vsix.old
+
+# Dependencies
+node_modules/**
+package-lock.json
+
+# Build artifacts
+out/**
+*.map
+
+# Test files
+test/**
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+
+# Documentation
+*.md
+docs/**
+
+# Git
+.git/**
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/**
+
+# Temporary files
+*.tmp
+*.temp

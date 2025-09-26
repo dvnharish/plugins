@@ -1,233 +1,139 @@
-Got it ✅ Harish — I’ll bundle **everything we’ve built so far** into a single comprehensive file.
-This file can serve as the **master PRD + design + mapping dictionary** for your VS Code plugin project.
-
----
-
-# 📑 VS Code Plugin – Converge → Elavon Migration (Master Document)
+# 📑 VS Code Plugin – Converge → Elavon Migrator (Updated with OpenAPI-based Mapping)
 
 ---
 
 ## 1. Overview
 
-This VS Code plugin automates migration of **legacy Converge APIs (REST + XML)** into **modern Elavon APIs (REST + JSON)**. It scans the codebase, identifies Converge endpoints, and uses **Copilot (GitHub/OpenAI)** to rewrite existing controller/service logic into Elavon-compliant code. The plugin also provides panels for scanning, credentials, documentation, migration previews, and inline updates.
+The plugin automates migration of Converge APIs (XML-based) to Elavon APIs (JSON-based).
+It uses **OpenAPI.json specs of both systems** to dynamically generate migration mappings (endpoint-level + field-level), rather than relying on a static `mapping.json`.
 
 ---
 
-## 2. Goals
+## 2. Panels
 
-* Automate Converge → Elavon modernization.
-* Reduce manual XML→JSON mapping effort.
-* Provide AI-assisted migration via Copilot.
-* Maintain developer workflow in VS Code.
-* Ensure consistency, accuracy, and security.
+### **Panel 1 – Project Scan**
 
----
+* Scan repo for:
 
-## 3. Key Features
+  * Converge endpoints (`/hosted-payments`, `/Checkout.js`, `/ProcessTransactionOnline`, `/batch-processing`).
+  * Controller/service classes.
+  * `ssl_*` fields.
+* Results in **tree view**:
 
-### Panel 1 – Project Scan
+  * Endpoints
+  * Controllers/Services
+  * Fields
+* Inline actions:
 
-* Scans repo, finds Converge endpoints (`/hosted-payments`, `/Checkout.js`, `/ProcessTransactionOnline`).
-* Lists controllers/services using `ssl_*` fields.
-
-### Panel 2 – Credentials
-
-* Secure Elavon `pk_` and `sk_` keys via VS Code Secret Storage.
-
-### Panel 3 – Documentation
-
-* Side-by-side Converge (XML) vs Elavon (JSON) documentation.
-* Shows OpenAPI specs for both.
-
-### Panel 4 – Migration Suggestions
-
-* Right-click endpoint → **Migrate to Elavon**.
-* Copilot prompt includes Converge code + mapping dictionary.
-* Copilot returns Elavon-compliant JSON code.
-* Diff preview → accept → inline update.
-* Undo/rollback supported.
-
-### Validation
-
-* Runs sandbox call against Elavon API (`https://uat.api.converge.eu.elavonaws.com`).
-
-### Bulk Migration
-
-* “Migrate All Endpoints” option.
+  * Right-click → “Migrate to Elavon”
+  * CodeLens → “Migrate” above Converge methods
 
 ---
 
-## 4. Architecture
+### **Panel 2 – Credentials Manager**
+
+* **Tree Structure**:
+
+  * **Converge Credentials (Auto-populated)** → scanned from configs/properties.
+  * **Elavon Credentials (User-entered)** → Client ID, Client Secret, Merchant ID.
+* Stored securely via VS Code Secret Storage.
+* **Play/Test button** → calls Elavon Auth API → shows response (✅ / ❌).
+
+---
+
+### **Panel 3 – Documentation Viewer**
+
+* **Side-by-Side Docs**:
+
+  * **Left:** Converge OpenAPI.json
+  * **Right:** Elavon OpenAPI.json
+* Interactive features:
+
+  * Highlight equivalent fields (e.g., `ssl_amount` ↔ `amount.total`) using dynamic schema comparison.
+  * Search field to look up endpoints or attributes.
+
+---
+
+### **Panel 4 – Migration Suggestions**
+
+* **Dynamic Mapping Engine**:
+
+  * Parse both OpenAPI specs.
+  * Build **mapping dictionary in memory**.
+  * Send Converge snippet + dynamic mapping rules → Copilot.
+* **Workflow**:
+
+  * Diff Preview → Inline acceptance/rollback.
+  * Bulk Migration → Apply across repo.
+
+---
+
+## 3. Updated Architecture
 
 ```mermaid
 flowchart TD
-    A[VS Code Plugin UI] -->|Commands| B[Extension Host]
-    B --> C[Parser Service (XML→JSON Mapping)]
-    B --> D[Copilot Service]
-    D -->|Prompt+Response| E[GitHub/OpenAI Copilot]
-    B --> F[Diff Preview Engine]
-    B --> G[File Updater]
-    B --> H[Credential Storage]
-    H --> I[Elavon Sandbox API]
+    A[VS Code Panels] --> B[Extension Host]
+    B --> C[Scan Service]
+    B --> D[Credential Service]
+    B --> E[Documentation Service]
+    B --> F[Migration Service]
+    F --> G[Dynamic Mapping Engine]
+    G --> OA1[Converge OpenAPI.json]
+    G --> OA2[Elavon OpenAPI.json]
+    F --> Copilot[GitHub/OpenAI Copilot]
+    D --> Auth[Elavon Auth API]
+    F --> Repo[Source Code Files]
+    F --> Preview[Diff Preview]
 ```
 
 ---
 
-## 5. Migration Flow with Copilot
+## 4. Functional Requirements
 
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant VSCode as VS Code Plugin
-    participant Parser as Parser Service
-    participant Copilot as GitHub/OpenAI Copilot
-    participant Repo as Source Code
-    participant EPG as Elavon Sandbox API
+### **Panel 1 – Project Scan**
 
-    Dev->>VSCode: Scan Project
-    VSCode->>Parser: Identify Converge Endpoints
-    Parser-->>VSCode: List endpoints
-    Dev->>VSCode: Right-click "Migrate to Elavon"
-    VSCode->>Copilot: Send Converge code + mapping rules
-    Copilot-->>VSCode: Return Elavon JSON code
-    VSCode->>Dev: Show Diff Preview
-    Dev->>VSCode: Accept migration
-    VSCode->>Repo: Update controller/service code
-    VSCode->>EPG: Test migrated API call (optional)
-    EPG-->>VSCode: Response JSON
-```
+* FR1.1: Must identify Converge endpoints using regex + OpenAPI.json reference.
+* FR1.2: Must display endpoints/controllers/fields in tree view.
+* FR1.3: Must enable right-click/CodeLens migration actions.
 
----
+### **Panel 2 – Credentials**
 
-## 6. Endpoint Mapping Strategy
+* FR2.1: Auto-populate Converge credentials.
+* FR2.2: Allow adding Elavon credentials securely.
+* FR2.3: Include “Test” button → call Auth API → display success/failure.
 
-| **Converge Endpoint**                | **Elavon Endpoint** | **Notes**                    |
-| ------------------------------------ | ------------------- | ---------------------------- |
-| `/hosted-payments/transaction_token` | `/transactions`     | Token → Transaction          |
-| `/Checkout.js`                       | `/payment-sessions` | Checkout → Payment Sessions  |
-| `/ProcessTransactionOnline`          | `/orders`           | General XML txn → JSON Order |
-| `/batch-processing`                  | `/batches`          | Batch XML/CSV → Batch JSON   |
-| `/NonElavonCertifiedDevice`          | `/terminals`        | Devices → Terminals          |
+### **Panel 3 – Documentation**
+
+* FR3.1: Must parse **Converge OpenAPI.json** + **Elavon OpenAPI.json**.
+* FR3.2: Show **side-by-side docs** with live schema comparison.
+* FR3.3: Must highlight corresponding fields automatically.
+
+### **Panel 4 – Migration**
+
+* FR4.1: Must dynamically generate field mappings from OpenAPI schemas.
+* FR4.2: Must send Converge code + dynamic mapping rules → Copilot.
+* FR4.3: Must display diff preview, accept/rollback inline.
+* FR4.4: Must support bulk migration.
 
 ---
 
-## 7. Comprehensive Mapping Dictionary
+## 5. Non-Functional Requirements
 
-```json
-{
-  "mappings": [
-    {
-      "convergeEndpoint": "/hosted-payments/transaction_token",
-      "elavonEndpoint": "/transactions",
-      "method": "POST",
-      "fieldMappings": {
-        "ssl_account_id": "processorAccount.id",
-        "ssl_user_id": "merchantAlias",
-        "ssl_pin": "apiKey.secret (sk_*)",
-        "ssl_transaction_type": "type",
-        "ssl_amount": "amount.total",
-        "ssl_tax_amount": "amount.tax",
-        "ssl_shipping_amount": "amount.shipping",
-        "ssl_currency_code": "amount.currency",
-        "ssl_invoice_number": "invoiceNumber",
-        "ssl_merchant_txn_id": "customReference",
-        "ssl_description": "description",
-        "ssl_customer_code": "customer.code",
-        "ssl_first_name": "customer.firstName",
-        "ssl_last_name": "customer.lastName",
-        "ssl_company": "customer.company",
-        "ssl_email": "customer.email",
-        "ssl_phone": "customer.phone",
-        "ssl_avs_address": "customer.address.line1",
-        "ssl_address2": "customer.address.line2",
-        "ssl_city": "customer.address.city",
-        "ssl_state": "customer.address.state",
-        "ssl_avs_zip": "customer.address.postalCode",
-        "ssl_country": "customer.address.country",
-        "ssl_card_number": "card.pan",
-        "ssl_exp_date": "card.expiry",
-        "ssl_cvv2cvc2": "card.securityCode",
-        "ssl_token": "paymentInstrument.token",
-        "ssl_add_token": "paymentInstrument.addToken",
-        "ssl_get_token": "paymentInstrument.getToken",
-        "ssl_void_transaction_id": "relatedTransactionId",
-        "ssl_recurring_flag": "recurring.enabled",
-        "ssl_recurring_id": "recurring.id"
-      }
-    },
-    {
-      "convergeEndpoint": "/Checkout.js",
-      "elavonEndpoint": "/payment-sessions",
-      "method": "POST",
-      "fieldMappings": {
-        "ssl_txn_auth_token": "sessionId",
-        "ssl_amount": "amount.total",
-        "ssl_currency_code": "amount.currency",
-        "ssl_first_name": "shopper.firstName",
-        "ssl_last_name": "shopper.lastName",
-        "ssl_email": "shopper.email",
-        "ssl_phone": "shopper.phone",
-        "ssl_avs_address": "shopper.address.line1",
-        "ssl_address2": "shopper.address.line2",
-        "ssl_city": "shopper.address.city",
-        "ssl_state": "shopper.address.state",
-        "ssl_avs_zip": "shopper.address.postalCode",
-        "ssl_country": "shopper.address.country",
-        "ssl_card_number": "card.pan",
-        "ssl_exp_date": "card.expiry",
-        "ssl_cvv2cvc2": "card.securityCode"
-      }
-    },
-    {
-      "convergeEndpoint": "/ProcessTransactionOnline",
-      "elavonEndpoint": "/orders",
-      "method": "POST",
-      "fieldMappings": {
-        "ssl_transaction_type": "type",
-        "ssl_amount": "amount.total",
-        "ssl_currency_code": "amount.currency",
-        "ssl_invoice_number": "invoiceNumber",
-        "ssl_merchant_txn_id": "customReference",
-        "ssl_description": "description",
-        "ssl_token": "paymentInstrument.token",
-        "ssl_add_token": "paymentInstrument.addToken",
-        "ssl_get_token": "paymentInstrument.getToken",
-        "ssl_void_transaction_id": "relatedTransactionId"
-      }
-    },
-    {
-      "convergeEndpoint": "/batch-processing",
-      "elavonEndpoint": "/batches",
-      "method": "POST",
-      "fieldMappings": {
-        "batch_file": "transactions[]",
-        "ssl_account_id": "processorAccount.id",
-        "ssl_user_id": "merchantAlias",
-        "ssl_batch_number": "batch.number",
-        "ssl_batch_date": "batch.date",
-        "ssl_total_amount": "batch.totalAmount",
-        "ssl_total_count": "batch.transactionCount"
-      }
-    },
-    {
-      "convergeEndpoint": "/NonElavonCertifiedDevice",
-      "elavonEndpoint": "/terminals",
-      "method": "GET/POST",
-      "fieldMappings": {
-        "ssl_terminal_id": "id",
-        "ssl_device_name": "name",
-        "ssl_bin_number": "processorAccount.bin",
-        "ssl_status": "status",
-        "ssl_location": "location",
-        "ssl_last_update": "lastUpdated"
-      }
-    }
-  ]
-}
-```
+* **Performance:** OpenAPI parsing ≤ 2s for each spec.
+* **Security:** Elavon credentials never stored in plaintext.
+* **Extensibility:** Supports new endpoints if OpenAPI.json changes.
+* **Reliability:** Mapping engine must gracefully handle unmapped fields (log + highlight).
 
 ---
 
+✅ This way, the **OpenAPI.json drives everything** — scanning, documentation, mapping, and migration.
+No more manual `mapping.json` maintenance.
+
+---
+
+<<<<<<< HEAD
+Do you want me to now **expand this into a task list (Agile Epics → Stories → Tasks)**, with separate epics for **Scan, Credentials, Docs, Migration** so you can directly load them into JIRA or GitHub Projects?
+=======
 ## 8. Benefits
 
 * **Time Savings:** 70–80% faster migrations.
@@ -239,26 +145,4 @@ sequenceDiagram
 
 ---
 
-## 9. Cursor AI Prompt (Development Scaffold)
-
-```
-You are an expert VS Code extension developer.  
-Build a VS Code plugin named "Converge-to-Elavon Migrator" with these features:
-
-- Use TypeScript + VS Code Extension API.
-- Panels: Scan, Credentials, Documentation, Migration Suggestions.
-- Detect Converge XML endpoints (transaction_token, Checkout.js, ProcessTransactionOnline, Batch Processing, Devices).
-- Map them to Elavon JSON endpoints using mapping.json.
-- Right-click "Migrate to Elavon" → send existing code + mapping rules to GitHub/OpenAI Copilot.
-- Copilot returns Elavon-compliant JSON code.
-- Show diff preview → update controller/service inline.
-- Securely store pk_/sk_ keys using VS Code Secret Storage.
-- Validate migrated code against Elavon sandbox (https://uat.api.converge.eu.elavonaws.com).
-- Scaffold structure:
-  /src/extension.ts
-  /src/panels/{ScanPanel, CredentialPanel, DocPanel, MigrationPanel}.ts
-  /src/services/{CopilotService, ParserService}.ts
-  /resources/mapping.json
-  package.json
-  README.md
-```
+>>>>>>> b9750a1f17ee69780b4ba1f1d28d708f2c154a74

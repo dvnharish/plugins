@@ -1,0 +1,156 @@
+{
+  "converge": {
+    "endpoints": {
+      "hostedPayments": [
+        "/hosted-payments/transaction_token",
+        "hosted-payments/transaction_token",
+        "hostedpayments/transactiontoken",
+        "hosted_payments_transaction_token"
+      ],
+      "checkout": [
+        "/Checkout.js",
+        "Checkout.js",
+        "checkout.js",
+        "converge.*checkout",
+        "checkout.*converge"
+      ],
+      "processTransaction": [
+        "/ProcessTransactionOnline\\b",
+        "ProcessTransactionOnline\\b.*\\(",
+        "process_transaction_online",
+        "processtransaction",
+        "transaction.*process.*\\(",
+        "\\.ProcessTransactionOnline",
+        "ProcessTransactionOnline.*http",
+        "ProcessTransactionOnline.*api"
+      ],
+      "batchProcessing": [
+        "/batch-processing",
+        "batch-processing",
+        "batch_processing",
+        "batchprocessing",
+        "batch.*process"
+      ],
+      "deviceManagement": [
+        "/NonElavonCertifiedDevice",
+        "NonElavonCertifiedDevice",
+        "non_elavon_certified_device",
+        "device.*management",
+        "terminal.*management"
+      ]
+    },
+    "sslFields": {
+      "core": "ssl_[a-zA-Z_][a-zA-Z0-9_]*",
+      "variations": [
+        "SSL_[a-zA-Z_][a-zA-Z0-9_]*",
+        "ssl[A-Z][a-zA-Z0-9]*",
+        "\"ssl_[a-zA-Z_][a-zA-Z0-9_]*\"",
+        "'ssl_[a-zA-Z_][a-zA-Z0-9_]*'",
+        "\\$ssl_[a-zA-Z_][a-zA-Z0-9_]*",
+        "ssl\\[[\"'][a-zA-Z_][a-zA-Z0-9_]*[\"']\\]",
+        ":ssl_[a-zA-Z_][a-zA-Z0-9_]*",
+        "ssl_[a-zA-Z_][a-zA-Z0-9_]*:"
+      ]
+    },
+    "urls": [
+      "https?:\\/\\/[^\\s]*converge[^\\s]*",
+      "https?:\\/\\/api\\.converge\\.com[^\\s]*",
+      "https?:\\/\\/[^\\s]*\\.converge\\.com[^\\s]*",
+      "converge\\.com[^\\s]*"
+    ],
+    "apiCalls": [
+      "fetch\\s*\\(\\s*[\"'][^\"']*converge[^\"']*[\"']",
+      "fetch\\s*\\(\\s*[\"'][^\"']*\\/hosted-payments[^\"']*[\"']",
+      "fetch\\s*\\(\\s*[\"'][^\"']*ProcessTransaction[^\"']*[\"']",
+      "axios\\.(get|post|put|delete)\\s*\\([^)]*converge[^)]*",
+      "axios\\s*\\(\\s*\\{[^}]*url[^}]*converge[^}]*\\}",
+      "curl_setopt\\s*\\([^)]*CURLOPT_URL[^)]*converge[^)]*",
+      "curl\\s+[^\\n]*converge"
+    ]
+  },
+  "elavon": {
+    "endpoints": {
+      "hostedPayments": [
+        "/api/v1/payments/hosted",
+        "api/v1/payments/hosted",
+        "payments/hosted",
+        "hosted_payments"
+      ],
+      "checkout": [
+        "/api/v1/checkout",
+        "api/v1/checkout",
+        "checkout",
+        "elavon.*checkout",
+        "checkout.*elavon"
+      ],
+      "processTransaction": [
+        "/api/v1/transactions/process",
+        "api/v1/transactions/process",
+        "transactions/process",
+        "process.*transaction",
+        "transaction.*process"
+      ],
+      "batchProcessing": [
+        "/api/v1/batch",
+        "api/v1/batch",
+        "batch",
+        "batch.*process"
+      ],
+      "deviceManagement": [
+        "/api/v1/devices",
+        "api/v1/devices",
+        "devices",
+        "device.*management"
+      ]
+    },
+    "sslFields": {
+      "core": "api_[a-zA-Z_][a-zA-Z0-9_]*",
+      "variations": [
+        "API_[a-zA-Z_][a-zA-Z0-9_]*",
+        "api[A-Z][a-zA-Z0-9]*",
+        "\"api_[a-zA-Z_][a-zA-Z0-9_]*\"",
+        "'api_[a-zA-Z_][a-zA-Z0-9_]*'",
+        "\\$api_[a-zA-Z_][a-zA-Z0-9_]*",
+        "api\\[[\"'][a-zA-Z_][a-zA-Z0-9_]*[\"']\\]",
+        ":api_[a-zA-Z_][a-zA-Z0-9_]*",
+        "api_[a-zA-Z_][a-zA-Z0-9_]*:"
+      ]
+    },
+    "urls": [
+      "https?:\\/\\/[^\\s]*elavon[^\\s]*",
+      "https?:\\/\\/api\\.elavon\\.com[^\\s]*",
+      "https?:\\/\\/[^\\s]*\\.elavon\\.com[^\\s]*",
+      "elavon\\.com[^\\s]*"
+    ],
+    "apiCalls": [
+      "fetch\\s*\\(\\s*[\"'][^\"']*elavon[^\"']*[\"']",
+      "fetch\\s*\\(\\s*[\"'][^\"']*\\/api\\/v1[^\"']*[\"']",
+      "axios\\.(get|post|put|delete)\\s*\\([^)]*elavon[^)]*",
+      "axios\\s*\\(\\s*\\{[^}]*url[^}]*elavon[^}]*\\}",
+      "curl_setopt\\s*\\([^)]*CURLOPT_URL[^)]*elavon[^)]*",
+      "curl\\s+[^\\n]*elavon"
+    ]
+  },
+  "supportedExtensions": [
+    ".js", ".ts", ".php", ".py", ".java", ".cs", ".rb", 
+    ".jsx", ".tsx", ".vue", ".svelte", ".html", ".htm"
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/out/**",
+    "**/.git/**",
+    "**/coverage/**",
+    "**/.nyc_output/**",
+    "**/*.min.js",
+    "**/*.bundle.js",
+    "**/*.map",
+    "**/package-lock.json",
+    "**/yarn.lock",
+    "**/.DS_Store",
+    "**/Thumbs.db"
+  ],
+  "maxFileSize": 1048576
+}
