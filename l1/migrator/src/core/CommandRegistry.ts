@@ -2230,6 +2230,131 @@ These files were skipped during scanning. Common causes:
     }
   }
 
+  /**
+   * Open credentials panel
+   */
+  private async handleOpenCredentials(): Promise<void> {
+    try {
+      console.log('🔐 Opening credentials panel...');
+      
+      // Since the panel focus is failing, let's go directly to the input dialog
+      // This provides a more reliable user experience
+      console.log('🔐 Showing credentials input dialog directly...');
+      await this.showCredentialsInputDialog();
+      
+    } catch (error) {
+      console.error('❌ Failed to open credentials panel:', error);
+      // Show fallback dialog even if everything fails
+      await this.showCredentialsInputDialog();
+    }
+  }
+
+  /**
+   * Show a simple credentials input dialog as fallback
+   */
+  private async showCredentialsInputDialog(): Promise<void> {
+    try {
+      console.log('🔐 Showing fallback credentials dialog...');
+      
+      // Get current credentials if any
+      const credentialService = this._serviceContainer.getCredentialService();
+      const existingCredentials = await credentialService.retrieveCredentials();
+      
+      // Show input dialog for Elavon Public Key
+      const publicKey = await vscode.window.showInputBox({
+        prompt: 'Enter Elavon Public Key',
+        placeHolder: 'e.g., pk_test_1234567890abcdef1234567890',
+        value: existingCredentials?.publicKey || '',
+        validateInput: (value) => {
+          if (!value || value.trim().length === 0) {
+            return 'Public Key is required';
+          }
+          if (!value.startsWith('pk_')) {
+            return 'Public Key must start with pk_';
+          }
+          if (value.length < 30) {
+            return 'Public Key appears to be too short';
+          }
+          return null;
+        }
+      });
+      
+      if (!publicKey) {
+        vscode.window.showInformationMessage('Credentials configuration cancelled');
+        return;
+      }
+      
+      // Show input dialog for Elavon Secret Key
+      const secretKey = await vscode.window.showInputBox({
+        prompt: 'Enter Elavon Secret Key',
+        placeHolder: 'e.g., sk_test_1234567890abcdef1234567890',
+        value: existingCredentials?.secretKey || '',
+        password: true,
+        validateInput: (value) => {
+          if (!value || value.trim().length === 0) {
+            return 'Secret Key is required';
+          }
+          if (!value.startsWith('sk_')) {
+            return 'Secret Key must start with sk_';
+          }
+          if (value.length < 30) {
+            return 'Secret Key appears to be too short';
+          }
+          return null;
+        }
+      });
+      
+      if (!secretKey) {
+        vscode.window.showInformationMessage('Credentials configuration cancelled');
+        return;
+      }
+      
+      // Ask for environment
+      const environment = await vscode.window.showQuickPick([
+        { label: 'Sandbox', description: 'Use Elavon sandbox environment (pk_test_/sk_test_)', picked: true },
+        { label: 'Production', description: 'Use Elavon production environment (pk_live_/sk_live_)' }
+      ], {
+        placeHolder: 'Select Elavon environment'
+      });
+      
+      if (!environment) {
+        vscode.window.showInformationMessage('Credentials configuration cancelled');
+        return;
+      }
+      
+      // Optional: Ask for Merchant ID
+      const merchantId = await vscode.window.showInputBox({
+        prompt: 'Enter Elavon Merchant ID (Optional)',
+        placeHolder: 'e.g., your_merchant_id_here',
+        value: existingCredentials?.merchantId || '',
+        validateInput: (value) => {
+          // Merchant ID is optional, so no validation needed
+          return null;
+        }
+      });
+      
+      // Save credentials with correct field names
+      const credentials = {
+        publicKey: publicKey.trim(),
+        secretKey: secretKey.trim(),
+        environment: environment.label.toLowerCase() as 'sandbox' | 'production',
+        merchantId: merchantId?.trim() || undefined
+      };
+      
+      await credentialService.storeCredentials(credentials);
+      
+      vscode.window.showInformationMessage(
+        `✅ Elavon credentials configured successfully for ${environment.label} environment`
+      );
+      
+      console.log('✅ Credentials saved via fallback dialog');
+      
+    } catch (error) {
+      console.error('❌ Failed to show credentials dialog:', error);
+      vscode.window.showErrorMessage(`Failed to configure credentials: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   public dispose(): void {
     this.disposables.forEach(disposable => disposable.dispose());
   }

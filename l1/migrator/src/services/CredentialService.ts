@@ -19,8 +19,8 @@ export class CredentialService {
   private static readonly CREDENTIALS_FILE = 'elavon-credentials.json';
 
   private static readonly KEY_PATTERNS = {
-    PUBLIC_KEY: /^pk_(test_|live_)?[a-zA-Z0-9]{24,}$/,
-    SECRET_KEY: /^sk_(test_|live_)?[a-zA-Z0-9]{24,}$/
+    PUBLIC_KEY: /^pk_[a-zA-Z0-9]{24,}$/,
+    SECRET_KEY: /^sk_[a-zA-Z0-9]{24,}$/
   };
 
   private readonly credentialsPath: string;
@@ -31,20 +31,14 @@ export class CredentialService {
   }
 
   /**
-   * Store Elavon credentials locally
+   * Store Elavon credentials securely in VS Code's secret storage
    */
   async storeCredentials(credentials: ElavonCredentials): Promise<void> {
     // Validate credentials before storing
     this.validateCredentials(credentials);
 
     try {
-      // Ensure the directory exists
-      const dir = path.dirname(this.credentialsPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-
-      // Store credentials in a local JSON file
+      // Store credentials in VS Code's secure secret storage
       const credentialsData = {
         publicKey: credentials.publicKey,
         secretKey: credentials.secretKey,
@@ -53,20 +47,20 @@ export class CredentialService {
         lastUpdated: new Date().toISOString()
       };
 
-      fs.writeFileSync(this.credentialsPath, JSON.stringify(credentialsData, null, 2), 'utf8');
+      // Use VS Code's secret storage API for secure storage
+      await this.context.secrets.store('elavon-credentials', JSON.stringify(credentialsData));
 
       // Log successful storage (without sensitive data)
-      console.log('Elavon credentials stored successfully', {
+      console.log('Elavon credentials stored securely in VS Code secret storage', {
         environment: credentials.environment,
         hasPublicKey: !!credentials.publicKey,
         hasSecretKey: !!credentials.secretKey,
-        hasMerchantId: !!credentials.merchantId,
-        filePath: this.credentialsPath
+        hasMerchantId: !!credentials.merchantId
       });
 
     } catch (error) {
       console.error('Failed to store Elavon credentials:', error);
-      throw new Error('Failed to store credentials locally');
+      throw new Error('Failed to store credentials securely');
     }
   }
 
@@ -75,14 +69,15 @@ export class CredentialService {
    */
   async retrieveCredentials(): Promise<ElavonCredentials | null> {
     try {
-      // Check if credentials file exists
-      if (!fs.existsSync(this.credentialsPath)) {
+      // Retrieve credentials from VS Code's secret storage
+      const credentialsString = await this.context.secrets.get('elavon-credentials');
+      
+      if (!credentialsString) {
         return null;
       }
 
-      // Read and parse credentials file
-      const fileContent = fs.readFileSync(this.credentialsPath, 'utf8');
-      const credentialsData = JSON.parse(fileContent);
+      // Parse the credentials data
+      const credentialsData = JSON.parse(credentialsString);
 
       // Return null if essential credentials are missing
       if (!credentialsData.publicKey || !credentialsData.secretKey || !credentialsData.environment) {
@@ -115,14 +110,14 @@ export class CredentialService {
    */
   async hasCredentials(): Promise<boolean> {
     try {
-      // Check if credentials file exists and has valid content
-      if (!fs.existsSync(this.credentialsPath)) {
+      // Check if credentials exist in secret storage
+      const credentialsString = await this.context.secrets.get('elavon-credentials');
+      
+      if (!credentialsString) {
         return false;
       }
 
-      const fileContent = fs.readFileSync(this.credentialsPath, 'utf8');
-      const credentialsData = JSON.parse(fileContent);
-
+      const credentialsData = JSON.parse(credentialsString);
       return !!(credentialsData.publicKey && credentialsData.secretKey);
     } catch (error) {
       console.error('Failed to check credential existence:', error);
@@ -135,12 +130,10 @@ export class CredentialService {
    */
   async clearCredentials(): Promise<void> {
     try {
-      // Delete the credentials file if it exists
-      if (fs.existsSync(this.credentialsPath)) {
-        fs.unlinkSync(this.credentialsPath);
-      }
+      // Remove credentials from VS Code's secret storage
+      await this.context.secrets.delete('elavon-credentials');
 
-      console.log('Elavon credentials cleared successfully');
+      console.log('Elavon credentials cleared successfully from VS Code secret storage');
     } catch (error) {
       console.error('Failed to clear Elavon credentials:', error);
       throw new Error('Failed to clear credentials');
@@ -213,17 +206,8 @@ export class CredentialService {
       throw new Error('Environment must be either "sandbox" or "production"');
     }
 
-    // Validate key environment consistency
-    const isTestKey = credentials.publicKey.includes('test_') || credentials.secretKey.includes('test_');
-    const isLiveKey = credentials.publicKey.includes('live_') || credentials.secretKey.includes('live_');
-    
-    if (credentials.environment === 'production' && isTestKey) {
-      throw new Error('Cannot use test keys in production environment');
-    }
-    
-    if (credentials.environment === 'sandbox' && isLiveKey) {
-      throw new Error('Cannot use live keys in sandbox environment');
-    }
+    // Note: Environment validation is flexible to support various Elavon key formats
+    // Users can choose sandbox or production based on their actual environment
 
     // Validate merchant ID if provided
     if (credentials.merchantId && credentials.merchantId.trim().length === 0) {

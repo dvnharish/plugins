@@ -160,12 +160,32 @@ export class PanelManager implements vscode.Disposable {
    */
   public async openCredentialsPanel(): Promise<void> {
     try {
-      // Show the credentials panel by opening the view
+      console.log('🔐 PanelManager: Opening credentials panel...');
+      
+      // Try to focus the credentials view first
       await vscode.commands.executeCommand('elavonx.credentialsView.focus');
+      console.log('✅ PanelManager: Credentials view focused');
+      
+      // Also try to show the credentials panel
+      try {
+        await vscode.commands.executeCommand('elavonx.credentialsPanel.focus');
+        console.log('✅ PanelManager: Credentials panel focused');
+      } catch (panelError) {
+        console.log('⚠️ PanelManager: Credentials panel focus failed, but view should be open');
+      }
+      
     } catch (error) {
-      console.error('Failed to open credentials panel:', error);
-      // Fallback: show a message
-      vscode.window.showInformationMessage('Please open the Credentials panel from the Activity Bar (ElavonX section)');
+      console.error('❌ PanelManager: Failed to open credentials panel:', error);
+      // Fallback: show a message with instructions
+      const choice = await vscode.window.showWarningMessage(
+        'Could not automatically open credentials panel. Would you like to open it manually?',
+        'Open Manually',
+        'Cancel'
+      );
+      
+      if (choice === 'Open Manually') {
+        vscode.window.showInformationMessage('Please open the Credentials panel from the Activity Bar (ElavonX section)');
+      }
     }
   }
 
